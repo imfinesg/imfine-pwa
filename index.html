@@ -122,8 +122,11 @@ async function subscribePush(){
     const perm=await Notification.requestPermission();
     if(perm!=='granted'){toast('Notifications were not enabled.');return;}
     const reg=await navigator.serviceWorker.ready;
-    let sub=await reg.pushManager.getSubscription();
-    if(!sub){ sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:urlB64ToUint8(VAPID_PUBLIC)}); }
+    let key=VAPID_PUBLIC;
+    try{ const kr=await fetch('/api/send-push',{cache:'no-store'}); const kj=await kr.json(); if(kj&&kj.vapidPublicKey) key=kj.vapidPublicKey; }catch(_){}
+    const existing=await reg.pushManager.getSubscription();
+    if(existing){ try{ await existing.unsubscribe(); }catch(_){} }
+    const sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:urlB64ToUint8(key)});
     await supabase.from('push_subscriptions').delete().eq('user_id',S.user.id);
     await supabase.from('push_subscriptions').insert({user_id:S.user.id, subscription:sub.toJSON()});
     sheetOpen=false; render(); toast('Notifications turned on ✓');
