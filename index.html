@@ -34,6 +34,7 @@
   .logo svg{width:44px;height:44px}
   .btn{border:0;border-radius:18px;font-size:16px;font-weight:700;padding:15px;width:100%;cursor:pointer;transition:transform .08s ease;display:flex;align-items:center;justify-content:center;gap:8px}
   .btn:active{transform:scale(.97)}
+  .btn svg{width:20px;height:20px;flex:none}
   .btn:disabled{opacity:.5}
   .btn-green{background:var(--green);color:#fff}.btn-sky{background:var(--sky);color:#fff}
   .btn-amber{background:var(--amber);color:#fff}.btn-ghost{background:#fff;color:var(--slate);border:1px solid var(--line)}
@@ -137,7 +138,7 @@ const fmt=(d)=>new Date(d).toLocaleTimeString([], {hour:'numeric',minute:'2-digi
 
 /* ============ state ============ */
 let S={screen:'loading', user:null, role:localStorage.getItem('imfine_role')||null,
-  settings:null, guardians:[], events:[], stepIdx:-1, gpsShared:false, gLink:null, seniorName:''};
+  settings:null, guardians:[], events:[], stepIdx:-1, gpsShared:false, gLink:null, seniorName:'', profileName:''};
 let sheetOpen=false, escTimers=[], pollTimer=null, authMode='signin';
 
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
@@ -153,7 +154,7 @@ async function boot(){
 }
 async function routeByRole(){
   if(S.role==='guardian'){await loadGuardianData();}
-  else{S.role='senior';await loadSeniorData();S.screen='senior';}
+  else{S.role='senior';await loadSeniorData();S.screen=(S.profileName?'senior':'seniorSetup');}
   render();
 }
 async function doAuth(email,password){
@@ -182,6 +183,15 @@ async function loadSeniorData(){
   S.guardians=gs||[];
   const {data:ev}=await supabase.from('check_in_events').select('*').eq('senior_id',uid).order('created_at',{ascending:false}).limit(20);
   S.events=ev||[];
+  const {data:prof}=await supabase.from('profiles').select('full_name').eq('id',uid).maybeSingle();
+  S.profileName=(prof&&prof.full_name)||'';
+}
+async function saveSeniorSetup(name,time){
+  const uid=S.user.id;
+  await supabase.from('profiles').update({full_name:name}).eq('id',uid);
+  await supabase.from('senior_settings').update({check_in_time:time}).eq('senior_id',uid);
+  S.profileName=name; S.settings.check_in_time=time;
+  await loadSeniorData(); S.screen='senior'; render(); toast('Saved');
 }
 async function logEvent(type,detail,extra={}){
   await supabase.from('check_in_events').insert(Object.assign({senior_id:S.user.id,type,detail},extra));
@@ -298,6 +308,23 @@ function screenAuth(){
     <p class="center" style="margin-top:14px">${su?'Already have an account?':'New here?'} <button class="link" data-a="auth-toggle">${su?'Sign in':'Create an account'}</button></p>
   </div>`;
 }
+function screenSeniorSetup(){
+  const t=(S.settings&&S.settings.check_in_time)?String(S.settings.check_in_time).slice(0,5):'09:00';
+  return `${topbar('Set up your check-in', S.profileName?'go-senior':'go-welcome')}
+  <div class="pad grow">
+    <div class="logo" style="width:64px;height:64px;border-radius:20px">${I.check}</div>
+    <h2 class="center" style="margin-top:14px">A little about you</h2>
+    <p class="muted center" style="margin-top:2px">So your family knows who's checking in.</p>
+    <div class="card" style="margin-top:18px">
+      <label class="fl">Your name</label>
+      <input id="se-name" placeholder="e.g. Margaret" value="${S.profileName||''}" />
+      <label class="fl">Daily check-in time</label>
+      <input id="se-time" type="time" value="${t}" />
+      <p class="tiny" style="margin-top:8px">We'll expect one tap from you each day by this time. Miss it, and your Guardians are alerted after a grace period.</p>
+    </div>
+    <button class="btn btn-green" style="margin-top:16px" data-a="save-setup">Save</button>
+  </div>`;
+}
 function screenSenior(){
   const st=S.settings.status||'waiting';const s=S.settings;
   const linked=S.guardians.filter(g=>g.linked);
@@ -357,7 +384,7 @@ function menuSheet(){
   if(!sheetOpen)return '';
   const senior=(S.role==='senior');
   return `<div class="sheet"><div class="inner"><div class="between"><b>${senior?'Testing tools':'Menu'}</b><button class="trash" data-a="close-sheet">${I.trash}</button></div>
-  ${senior?`<p class="tiny" style="margin:4px 0 12px">Testing tools — removed before launch.</p><div style="display:flex;flex-direction:column;gap:8px"><button class="btn btn-amber" data-a="sim-missed">${I.alert}<span>Simulate a missed check-in</span></button><div class="row"><button class="btn ${S.settings.plan==='free'?'btn-green':'btn-ghost'}" data-a="plan-free">Free</button><button class="btn ${S.settings.plan==='premium'?'btn-green':'btn-ghost'}" data-a="plan-premium">Premium</button></div><button class="btn btn-ghost" data-a="reset-day">Reset today</button><button class="btn btn-ghost" data-a="sign-out">Sign out</button></div>`
+  ${senior?`<p class="tiny" style="margin:4px 0 12px">Testing tools — removed before launch.</p><div style="display:flex;flex-direction:column;gap:8px"><button class="btn btn-amber" data-a="sim-missed">${I.alert}<span>Simulate a missed check-in</span></button><div class="row"><button class="btn ${S.settings.plan==='free'?'btn-green':'btn-ghost'}" data-a="plan-free">Free</button><button class="btn ${S.settings.plan==='premium'?'btn-green':'btn-ghost'}" data-a="plan-premium">Premium</button></div><button class="btn btn-ghost" data-a="reset-day">Reset today</button><button class="btn btn-ghost" data-a="edit-details">Edit name &amp; time</button><button class="btn btn-ghost" data-a="sign-out">Sign out</button></div>`
   :`<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px"><button class="btn btn-ghost" data-a="sign-out">Sign out</button></div>`}
   </div></div>`;
 }
@@ -372,6 +399,7 @@ function render(){
     case 'welcome':html=screenWelcome();break;
     case 'auth':html=screenAuth();break;
     case 'senior':html=screenSenior();break;
+    case 'seniorSetup':html=screenSeniorSetup();break;
     case 'guardianLink':html=screenGuardianLink();break;
     case 'guardian':html=screenGuardian();break;
     default:html=screenWelcome();
@@ -390,6 +418,9 @@ document.getElementById('app').addEventListener('click',async(e)=>{
     case 'choose-guardian':await chooseRole('guardian');break;
     case 'auth-toggle':authMode=(authMode==='signup'?'signin':'signup');render();break;
     case 'auth-go':{const em=document.getElementById('au-email').value.trim();const pw=document.getElementById('au-pass').value;if(!em||!pw){toast('Enter email and password');break;}t.disabled=true;await doAuth(em,pw);break;}
+    case 'save-setup':{const n=document.getElementById('se-name').value.trim();const tm=document.getElementById('se-time').value||'09:00';if(!n){toast('Please enter your name');break;}await saveSeniorSetup(n,tm);break;}
+    case 'edit-details':sheetOpen=false;S.screen='seniorSetup';render();break;
+    case 'go-senior':S.screen='senior';render();break;
     case 'check-in':await checkIn();break;
     case 'toggle-daily':await setWhatsappDaily(!S.settings.whatsapp_daily);break;
     case 'show-add':S._adding=true;render();break;
