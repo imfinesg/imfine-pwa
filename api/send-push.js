@@ -14,7 +14,7 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
-    return res.status(200).json({ status: "ok", hint: "IMFine push function is live." });
+    return res.status(200).json({ status: "ok", vapidPublicKey: process.env.VAPID_PUBLIC_KEY || null });
   }
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   if ((req.headers["x-imfine-secret"] || "") !== process.env.WEBHOOK_SECRET) {
