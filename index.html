@@ -105,6 +105,35 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL  = "https://zsxhkszxnzabieivhsrb.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzeGhrc3p4bnphYmllaXZoc3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDU0OTYsImV4cCI6MjA5OTIyMTQ5Nn0.osF22Nq9ApUPsSYYXSi_HUe8xX1xNLDKfFldlfVCar0";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+const VAPID_PUBLIC = "BMTqQk6I3xtWNjq7sXnpHudDGYVivt64Z7A7e4J5Fa6hNmcHDMX7wFh8SW61hNaG0CymMYNL493aKXIgup7CoEo";
+
+function urlB64ToUint8(b64){
+  const pad='='.repeat((4-b64.length%4)%4);
+  const s=(b64+pad).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(s); const arr=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i);
+  return arr;
+}
+async function subscribePush(){
+  try{
+    if(!('serviceWorker' in navigator)||!('PushManager' in window)||typeof Notification==='undefined'){
+      toast('Notifications aren\'t supported here. On iPhone, add IMFine to your Home Screen first.');return;
+    }
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){toast('Notifications were not enabled.');return;}
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){ sub=await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:urlB64ToUint8(VAPID_PUBLIC)}); }
+    await supabase.from('push_subscriptions').delete().eq('user_id',S.user.id);
+    await supabase.from('push_subscriptions').insert({user_id:S.user.id, subscription:sub.toJSON()});
+    sheetOpen=false; render(); toast('Notifications turned on ✓');
+  }catch(e){ toast(e.message||'Could not enable notifications'); }
+}
+function pushCard(){
+  if(typeof Notification==='undefined'||Notification.permission==='granted') return '';
+  return `<div class="card between" style="margin-top:12px"><div class="row"><span style="width:22px;height:22px;color:var(--green)">${I.bell}</span><span class="small" style="color:var(--ink)">Turn on notifications</span></div><button class="btn btn-green" style="width:auto;padding:9px 16px" data-a="enable-push">Enable</button></div>`;
+}
+
 
 /* ============ icons ============ */
 const I={
@@ -338,7 +367,7 @@ function screenSenior(){
   return `${topbar('Your check-in','open-menu')}
   <div class="center" style="padding:2px 20px 6px"><span class="small">${new Date().toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'})}</span></div>
   <div class="pad" style="padding-top:6px">${main}
-    ${extras?`<div class="card between" style="margin-top:16px"><div class="row"><span style="width:22px;height:22px;color:var(--green)">${I.chat}</span><span class="small" style="color:var(--ink)">Notify Guardians when I check in</span></div><button class="toggle ${s.whatsapp_daily?'on':''}" data-a="toggle-daily"><span class="dot"></span></button></div>${guardianManager()}`:''}
+    ${extras?`${pushCard()}<div class="card between" style="margin-top:16px"><div class="row"><span style="width:22px;height:22px;color:var(--green)">${I.chat}</span><span class="small" style="color:var(--ink)">Notify Guardians when I check in</span></div><button class="toggle ${s.whatsapp_daily?'on':''}" data-a="toggle-daily"><span class="dot"></span></button></div>${guardianManager()}`:''}
   </div>
   <button class="fab" data-a="open-test">${I.gear}</button>`;
 }
@@ -377,15 +406,15 @@ function screenGuardian(){
   const gps=S.gpsShared?`<div class="card" style="margin-top:12px;background:var(--red-l);border:1px solid var(--red-b)"><div class="row" style="color:#b91c1c;font-weight:700;font-size:14px"><span style="width:16px;height:16px">${I.pin}</span>Last known location</div><div style="font-size:14px;margin-top:4px">${LOC.place}</div><div class="tiny">${LOC.lat}, ${LOC.lng}</div></div>`:'';
   return `${topbar('Watching over '+S.seniorName,'open-menu','sky')}
   <div class="pad"><div class="statuscard" style="background:${th.bg}"><div class="badge"><span style="width:34px;height:34px">${th.ic}</span></div><div style="font-size:20px;font-weight:800;margin-top:10px">${th.label}</div><div style="font-size:14px;opacity:.92;margin-top:2px">${th.sub}</div></div>
-  ${gps}<p class="small" style="font-weight:700;color:var(--ink);margin:16px 0 6px">Recent activity</p><ul class="feed">${feed||'<li class="fitem"><span class="dotc"></span><div class="tiny">No activity yet.</div></li>'}</ul></div>
+  ${gps}${pushCard()}<p class="small" style="font-weight:700;color:var(--ink);margin:16px 0 6px">Recent activity</p><ul class="feed">${feed||'<li class="fitem"><span class="dotc"></span><div class="tiny">No activity yet.</div></li>'}</ul></div>
   <button class="fab" data-a="open-menu">${I.gear}</button>`;
 }
 function menuSheet(){
   if(!sheetOpen)return '';
   const senior=(S.role==='senior');
   return `<div class="sheet"><div class="inner"><div class="between"><b>${senior?'Testing tools':'Menu'}</b><button class="trash" data-a="close-sheet">${I.trash}</button></div>
-  ${senior?`<p class="tiny" style="margin:4px 0 12px">Testing tools — removed before launch.</p><div style="display:flex;flex-direction:column;gap:8px"><button class="btn btn-amber" data-a="sim-missed">${I.alert}<span>Simulate a missed check-in</span></button><div class="row"><button class="btn ${S.settings.plan==='free'?'btn-green':'btn-ghost'}" data-a="plan-free">Free</button><button class="btn ${S.settings.plan==='premium'?'btn-green':'btn-ghost'}" data-a="plan-premium">Premium</button></div><button class="btn btn-ghost" data-a="reset-day">Reset today</button><button class="btn btn-ghost" data-a="edit-details">Edit name &amp; time</button><button class="btn btn-ghost" data-a="sign-out">Sign out</button></div>`
-  :`<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px"><button class="btn btn-ghost" data-a="sign-out">Sign out</button></div>`}
+  ${senior?`<p class="tiny" style="margin:4px 0 12px">Testing tools — removed before launch.</p><div style="display:flex;flex-direction:column;gap:8px"><button class="btn btn-green" data-a="enable-push">${I.bell}<span>Turn on notifications</span></button><button class="btn btn-amber" data-a="sim-missed">${I.alert}<span>Simulate a missed check-in</span></button><div class="row"><button class="btn ${S.settings.plan==='free'?'btn-green':'btn-ghost'}" data-a="plan-free">Free</button><button class="btn ${S.settings.plan==='premium'?'btn-green':'btn-ghost'}" data-a="plan-premium">Premium</button></div><button class="btn btn-ghost" data-a="reset-day">Reset today</button><button class="btn btn-ghost" data-a="edit-details">Edit name &amp; time</button><button class="btn btn-ghost" data-a="sign-out">Sign out</button></div>`
+  :`<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px"><button class="btn btn-green" data-a="enable-push">${I.bell}<span>Turn on notifications</span></button><button class="btn btn-ghost" data-a="sign-out">Sign out</button></div>`}
   </div></div>`;
 }
 function topbar(label,action,tint){const c=tint==='sky'?'var(--sky)':'var(--green-d)';return `<div class="topbar"><button class="back" data-a="${action}">${action==='open-menu'?I.gear:I.back}</button><span class="barlabel" style="color:${c}">${label}</span></div>`;}
@@ -420,6 +449,7 @@ document.getElementById('app').addEventListener('click',async(e)=>{
     case 'auth-go':{const em=document.getElementById('au-email').value.trim();const pw=document.getElementById('au-pass').value;if(!em||!pw){toast('Enter email and password');break;}t.disabled=true;await doAuth(em,pw);break;}
     case 'save-setup':{const n=document.getElementById('se-name').value.trim();const tm=document.getElementById('se-time').value||'09:00';if(!n){toast('Please enter your name');break;}await saveSeniorSetup(n,tm);break;}
     case 'edit-details':sheetOpen=false;S.screen='seniorSetup';render();break;
+    case 'enable-push':await subscribePush();break;
     case 'go-senior':S.screen='senior';render();break;
     case 'check-in':await checkIn();break;
     case 'toggle-daily':await setWhatsappDaily(!S.settings.whatsapp_daily);break;
