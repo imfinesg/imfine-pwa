@@ -5,11 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>IMFine — Daily Check-in</title>
 <meta name="theme-color" content="#10b981" />
-<meta name="description" content="One tap a day. Someone always knows you're okay." />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="IMFine" />
 <style>
   :root{
@@ -21,12 +19,8 @@
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg);color:var(--ink);
-  }
-  #app{max-width:480px;margin:0 auto;min-height:100dvh;background:var(--green-l);
-    display:flex;flex-direction:column;overflow:hidden;position:relative}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  #app{max-width:480px;margin:0 auto;min-height:100dvh;background:var(--green-l);display:flex;flex-direction:column;overflow:hidden;position:relative}
   .pad{padding:22px 20px}
   .center{text-align:center}
   h2{font-size:26px;font-weight:800;margin:0}
@@ -36,88 +30,81 @@
   .grow{flex:1}
   .row{display:flex;align-items:center;gap:10px}
   .between{display:flex;align-items:center;justify-content:space-between}
-  .logo{width:80px;height:80px;border-radius:24px;display:grid;place-items:center;margin:0 auto;
-    background:linear-gradient(135deg,#34d399,#059669);box-shadow:0 12px 24px rgba(5,80,60,.28)}
+  .logo{width:80px;height:80px;border-radius:24px;display:grid;place-items:center;margin:0 auto;background:linear-gradient(135deg,#34d399,#059669);box-shadow:0 12px 24px rgba(5,80,60,.28)}
   .logo svg{width:44px;height:44px}
-  /* buttons */
-  .btn{border:0;border-radius:18px;font-size:16px;font-weight:700;padding:15px;width:100%;
-    cursor:pointer;transition:transform .08s ease;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn{border:0;border-radius:18px;font-size:16px;font-weight:700;padding:15px;width:100%;cursor:pointer;transition:transform .08s ease;display:flex;align-items:center;justify-content:center;gap:8px}
   .btn:active{transform:scale(.97)}
-  .btn-green{background:var(--green);color:#fff}
-  .btn-sky{background:var(--sky);color:#fff}
-  .btn-amber{background:var(--amber);color:#fff}
-  .btn-ghost{background:#fff;color:var(--slate);border:1px solid var(--line)}
-  .btn-red{background:var(--red);color:#fff}
+  .btn:disabled{opacity:.5}
+  .btn-green{background:var(--green);color:#fff}.btn-sky{background:var(--sky);color:#fff}
+  .btn-amber{background:var(--amber);color:#fff}.btn-ghost{background:#fff;color:var(--slate);border:1px solid var(--line)}
   .card{background:var(--card);border-radius:22px;padding:16px;box-shadow:0 1px 3px rgba(15,23,42,.06)}
-  .choice{display:flex;gap:14px;align-items:center;text-align:left;width:100%;border-radius:24px;
-    padding:16px;background:#fff;border:2px solid var(--green-b);cursor:pointer;transition:transform .08s}
-  .choice.sky{border-color:var(--sky-b)}
-  .choice:active{transform:scale(.97)}
+  .choice{display:flex;gap:14px;align-items:center;text-align:left;width:100%;border-radius:24px;padding:16px;background:#fff;border:2px solid var(--green-b);cursor:pointer;transition:transform .08s}
+  .choice.sky{border-color:var(--sky-b)}.choice:active{transform:scale(.97)}
   .choice .ic{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;flex:none}
-  .choice .ic.g{background:var(--green-l)} .choice .ic.s{background:var(--sky-l)}
-  .choice h3{margin:0;font-size:19px}
-  .choice p{margin:2px 0 0;font-size:14px;color:var(--slate)}
-  input,select{width:100%;border:1px solid var(--line);border-radius:14px;padding:13px 14px;
-    font-size:16px;outline:none;background:#fff}
-  input:focus,select:focus{border-color:var(--green)}
+  .choice .ic.g{background:var(--green-l)}.choice .ic.s{background:var(--sky-l)}
+  .choice h3{margin:0;font-size:19px}.choice p{margin:2px 0 0;font-size:14px;color:var(--slate)}
+  label.fl{font-size:13px;color:var(--slate);display:block;margin-top:12px;margin-bottom:5px}
+  input{width:100%;border:1px solid var(--line);border-radius:14px;padding:13px 14px;font-size:16px;outline:none;background:#fff}
+  input:focus{border-color:var(--green)}
   .topbar{display:flex;align-items:center;gap:10px;padding:14px 16px 6px}
-  .back{width:38px;height:38px;border-radius:50%;background:#fff;border:0;display:grid;place-items:center;
-    box-shadow:0 1px 3px rgba(15,23,42,.08);cursor:pointer}
+  .back{width:38px;height:38px;border-radius:50%;background:#fff;border:0;display:grid;place-items:center;box-shadow:0 1px 3px rgba(15,23,42,.08);cursor:pointer}
   .barlabel{font-weight:700;font-size:14px}
-  /* big check button */
   .okwrap{display:grid;place-items:center;margin:10px 0}
   .okbtn{position:relative;border:0;background:transparent;cursor:pointer}
-  .okbtn .disc{width:210px;height:210px;border-radius:50%;display:grid;place-items:center;color:#fff;
-    background:linear-gradient(135deg,#34d399,#059669);box-shadow:0 16px 30px rgba(5,80,60,.3)}
+  .okbtn .disc{width:200px;height:200px;border-radius:50%;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#34d399,#059669);box-shadow:0 16px 30px rgba(5,80,60,.3)}
   .okbtn:active .disc{transform:scale(.96)}
   .okbtn .ring{position:absolute;inset:0;border-radius:50%;background:#34d399;animation:pulse 2s ease-out infinite}
   @keyframes pulse{0%{transform:scale(.95);opacity:.6}70%{transform:scale(1.28);opacity:0}100%{opacity:0}}
   .okbtn .lbl{font-size:24px;font-weight:800;margin-top:4px}
   .disc.done{background:var(--green)}
-  /* toggle */
   .toggle{width:46px;height:26px;border-radius:20px;border:0;padding:3px;cursor:pointer;background:#cbd5e1}
   .toggle.on{background:var(--green)}
   .toggle .dot{width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s;display:block}
   .toggle.on .dot{transform:translateX(20px)}
-  /* list */
   .glist{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
   .gitem{display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border-radius:14px;padding:10px 12px}
   .trash{border:0;background:transparent;color:var(--slate2);cursor:pointer;padding:6px;border-radius:8px}
-  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
-    padding:4px 9px;border-radius:20px;background:var(--green-l);color:var(--green-d)}
-  /* escalation */
   .chain{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
   .step{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:16px;padding:10px;background:#fff;opacity:.55}
   .step.on{opacity:1;border-color:var(--amber-b);background:var(--amber-l)}
   .step.on.fs{border-color:var(--red-b);background:var(--red-l)}
   .step .sic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex:none;background:#e2e8f0;color:#94a3b8}
-  .step.on .sic{background:var(--amber);color:#fff}
-  .step.on.fs .sic{background:var(--red);color:#fff}
+  .step.on .sic{background:var(--amber);color:#fff}.step.on.fs .sic{background:var(--red);color:#fff}
   .step b{font-size:14px;display:block}
   .msgcard{background:var(--ink);color:#fff;border-radius:16px;padding:12px;margin-top:12px}
   .maprow{display:flex;gap:8px;align-items:center;background:#1e293b;border-radius:10px;padding:8px;margin-top:8px;font-size:12px}
-  /* guardian status */
   .statuscard{border-radius:24px;padding:22px;text-align:center;color:#fff;box-shadow:0 12px 24px rgba(15,23,42,.12)}
   .statuscard .badge{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;margin:0 auto}
   .feed{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
   .fitem{display:flex;gap:8px;align-items:flex-start;background:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 1px 2px rgba(15,23,42,.05)}
   .fitem .dotc{width:8px;height:8px;border-radius:50%;background:var(--sky);margin-top:6px;flex:none}
-  /* test fab + sheet */
-  .fab{position:absolute;right:14px;bottom:16px;width:48px;height:48px;border-radius:50%;background:var(--ink);
-    color:#fff;border:0;display:grid;place-items:center;box-shadow:0 8px 18px rgba(15,23,42,.25);cursor:pointer;z-index:20}
+  .fab{position:absolute;right:14px;bottom:16px;width:48px;height:48px;border-radius:50%;background:var(--ink);color:#fff;border:0;display:grid;place-items:center;box-shadow:0 8px 18px rgba(15,23,42,.25);cursor:pointer;z-index:20}
   .sheet{position:absolute;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:flex-end;z-index:30}
   .sheet .inner{background:#fff;width:100%;border-radius:22px 22px 0 0;padding:18px}
   .hidden{display:none !important}
   .banner{background:var(--amber-l);color:#92610a;border-radius:14px;padding:10px 12px;font-size:12px}
-  .footnote{padding:14px 20px 22px;text-align:center}
+  .codebox{font-family:monospace;font-size:26px;font-weight:800;letter-spacing:6px;text-align:center;background:var(--green-l);border:2px dashed var(--green-b);border-radius:14px;padding:12px;color:var(--green-d)}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 16px;border-radius:14px;font-size:14px;max-width:90%;z-index:50;box-shadow:0 8px 20px rgba(0,0,0,.25);opacity:0;transition:opacity .2s;pointer-events:none}
+  #toast.show{opacity:1}
+  .spin{width:34px;height:34px;border:3px solid var(--green-b);border-top-color:var(--green);border-radius:50%;animation:sp 1s linear infinite;margin:40px auto}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .link{background:none;border:0;color:var(--green-d);font-weight:600;font-size:14px;cursor:pointer;text-decoration:underline}
 </style>
 </head>
 <body>
-<div id="app"></div>
+<div id="app"><div class="spin"></div></div>
+<div id="toast"></div>
 
-<script>
-/* ---------------- tiny icon set (inline SVG) ---------------- */
-const I = {
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+/* ============ CONFIG (public values — safe in the browser) ============ */
+const SUPABASE_URL  = "https://zsxhkszxnzabieivhsrb.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzeGhrc3p4bnphYmllaXZoc3JiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NDU0OTYsImV4cCI6MjA5OTIyMTQ5Nn0.osF22Nq9ApUPsSYYXSi_HUe8xX1xNLDKfFldlfVCar0";
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+/* ============ icons ============ */
+const I={
   check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>',
   user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
   hands:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.35-9.5-8.5C1 9 3 6 6 6c1.8 0 3 1 3 1s1.2-1 3-1"/><path d="M12 8l3 3 6-6"/></svg>',
@@ -133,337 +120,296 @@ const I = {
   clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
   pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
   gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.3 1a7 7 0 0 0-1.7-1L14.5 2h-4L10 4.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.5L6 9.5a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.3-1a7 7 0 0 0 1.7 1l.5 2.5h4l.5-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.5-2-1.5c.1-.3.1-.7.1-1z"/></svg>',
-  crown:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l4 4 5-6 5 6 4-4v11H3z"/></svg>',
   send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>',
 };
 
-/* ---------------- state ---------------- */
 const CHAIN=[
   {key:'r1',title:'Gentle reminder',real:'at the missed window',detail:'Push: "Time to check in."',ic:I.bell},
   {key:'r2',title:'Louder alarm',real:'~1 hour later',detail:'Repeated push and a louder alert.',ic:I.bell},
   {key:'r3',title:'Final alarm',real:'~3 hours later',detail:'Last attempt before Guardians are alerted.',ic:I.alert},
-  {key:'fs',title:'Guardians alerted',real:'grace period elapsed',detail:'WhatsApp + location sent.',ic:I.shield},
+  {key:'fs',title:'Guardians alerted',real:'grace period elapsed',detail:'Push + email + location sent.',ic:I.shield},
 ];
 const LOC={lat:1.3521,lng:103.8198,place:'Ang Mo Kio Ave 3, Singapore'};
-const uid=()=>Math.random().toString(36).slice(2,8);
 const code6=()=>String(Math.floor(100000+Math.random()*900000));
-const timeNow=()=>new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+const fmt=(d)=>new Date(d).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
 
-let S = load() || {
-  role:null, screen:'welcome',
-  senior:{ name:'', checkInTime:'09:00', plan:'premium', whatsappDaily:true,
-           status:'waiting', guardians:[], events:[] },
-  activeGuardianId:null,
-};
-let escTimers=[], sheetOpen=false;
+/* ============ state ============ */
+let S={screen:'loading', user:null, role:localStorage.getItem('imfine_role')||null,
+  settings:null, guardians:[], events:[], stepIdx:-1, gpsShared:false, gLink:null, seniorName:''};
+let sheetOpen=false, escTimers=[], pollTimer=null, authMode='signin';
 
-function persist(){ return {role:S.role,screen:S.screen,senior:S.senior,activeGuardianId:S.activeGuardianId}; }
-function save(){ try{ localStorage.setItem('imfine', JSON.stringify(persist())); }catch(e){} }
-function load(){ try{ const r=localStorage.getItem('imfine'); return r?JSON.parse(r):null; }catch(e){ return null; } }
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+function clearEsc(){escTimers.forEach(clearTimeout);escTimers=[];}
+function stopPoll(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
 
-function log(type,detail,extra){ S.senior.events.unshift(Object.assign({id:uid(),ts:Date.now(),type,detail},extra||{})); }
-const linked=()=>S.senior.guardians.filter(g=>g.linked);
-const maxG=()=>S.senior.plan==='free'?1:5;
+/* ============ auth ============ */
+async function boot(){
+  const {data:{session}}=await supabase.auth.getSession();
+  S.user=session?.user||null;
+  if(!S.user){S.screen='welcome';return render();}
+  await routeByRole();
+}
+async function routeByRole(){
+  if(S.role==='guardian'){await loadGuardianData();}
+  else{S.role='senior';await loadSeniorData();S.screen='senior';}
+  render();
+}
+async function doAuth(email,password){
+  try{
+    let res;
+    if(authMode==='signup') res=await supabase.auth.signUp({email,password});
+    else res=await supabase.auth.signInWithPassword({email,password});
+    if(res.error) throw res.error;
+    if(!res.data.session){toast('Check your email to confirm, then sign in.');return;}
+    S.user=res.data.session.user;
+    await routeByRole();
+  }catch(e){toast(e.message||'Sign-in failed');}
+}
+async function signOut(){clearEsc();stopPoll();await supabase.auth.signOut();S.user=null;S.role=null;localStorage.removeItem('imfine_role');S.screen='welcome';sheetOpen=false;render();}
 
-/* ---------------- actions ---------------- */
-function checkIn(){
-  clearEsc(); S.senior.status='ok';
-  log('checkin','You tapped "I\'m OK".');
-  if(S.senior.whatsappDaily){
-    const ch=S.senior.plan==='free'?'Email':'WhatsApp';
-    linked().forEach(g=>log('reassure', ch+' to '+g.name+': "'+(S.senior.name||'Your loved one')+' checked in and is OK today ✓ ('+timeNow()+')."'));
+/* ============ data: senior ============ */
+async function loadSeniorData(){
+  const uid=S.user.id;
+  let {data:st}=await supabase.from('senior_settings').select('*').eq('senior_id',uid).maybeSingle();
+  if(!st){
+    const ins=await supabase.from('senior_settings').insert({senior_id:uid}).select().single();
+    st=ins.data;
   }
-  render();
+  S.settings=st||{status:'waiting',plan:'free',whatsapp_daily:false};
+  const {data:gs}=await supabase.from('guardians').select('*').eq('senior_id',uid).order('created_at');
+  S.guardians=gs||[];
+  const {data:ev}=await supabase.from('check_in_events').select('*').eq('senior_id',uid).order('created_at',{ascending:false}).limit(20);
+  S.events=ev||[];
 }
-function toggleWhatsapp(){ S.senior.whatsappDaily=!S.senior.whatsappDaily; render(); }
-function addGuardian(name,email){
-  if(S.senior.guardians.length>=maxG()) return;
+async function logEvent(type,detail,extra={}){
+  await supabase.from('check_in_events').insert(Object.assign({senior_id:S.user.id,type,detail},extra));
+}
+async function checkIn(){
+  clearEsc();
+  await supabase.from('senior_settings').update({status:'ok',last_check_in_at:new Date().toISOString()}).eq('senior_id',S.user.id);
+  await logEvent('checkin','Tapped "I\'m OK".');
+  const linked=S.guardians.filter(g=>g.linked);
+  if(S.settings.whatsapp_daily){for(const g of linked){await logEvent('reassure','Reassurance queued for '+g.name+' (email/push).',{channel:'email'});}}
+  await loadSeniorData();render();toast('Checked in — you\'re all set for today');
+}
+async function addGuardian(name,email){
+  if(S.guardians.length>=(S.settings.plan==='free'?1:5))return;
   const c=code6();
-  S.senior.guardians.push({id:uid(),name,email,code:c,linked:false});
-  log('invite','Linking code '+c+' emailed to '+name+' <'+email+'>.');
-  render();
+  const {error}=await supabase.from('guardians').insert({senior_id:S.user.id,name,email,link_code:c,channel:'email'});
+  if(error){toast(error.message);return;}
+  await logEvent('invite','Invite created for '+name+' <'+email+'> (code '+c+').');
+  await loadSeniorData();render();
 }
-function removeGuardian(id){ S.senior.guardians=S.senior.guardians.filter(g=>g.id!==id); render(); }
-function linkByCode(input){
-  const g=S.senior.guardians.find(x=>x.code===String(input).trim());
-  if(!g) return false;
-  g.linked=true; S.activeGuardianId=g.id; S.role='guardian';
-  log('linked',g.name+' linked to the check-ins.');
-  S.screen='guardian'; render(); return true;
-}
-function notifyGuardians(){
-  S.senior.gpsShared=true;
-  log('gps','Location requested for the first time today: '+LOC.lat+', '+LOC.lng+' ('+LOC.place+').');
-  const chans=S.senior.plan==='free'?['Email']:['WhatsApp','Voice call'];
-  (linked().length?linked():S.senior.guardians.slice(0,1)).forEach(g=>
-    chans.forEach(c=>log('alert', c+' to '+g.name+': "We haven\'t heard from '+(S.senior.name||'them')+' today after 3 reminders. Last location: '+LOC.place+'."')));
-}
-function simulateMissed(){
-  clearEsc(); S.senior.status='grace'; S.senior.stepIdx=0; S.senior.gpsShared=false; sheetOpen=false;
-  log('missed','Check-in window passed with no response. Grace period started.');
-  CHAIN.forEach((s,i)=>{
-    escTimers.push(setTimeout(()=>{
-      S.senior.stepIdx=i;
-      if(s.key==='fs'){ S.senior.status='alert'; notifyGuardians(); }
-      else log('escalate',s.title+' — '+s.detail);
-      render();
-    }, (i+1)*3000));
-  });
-  render();
-}
-function stopAlerts(){ clearEsc(); checkIn(); }
-function clearEsc(){ escTimers.forEach(clearTimeout); escTimers=[]; S.senior.gpsShared=false; S.senior.stepIdx=-1; }
-function resetDay(){ clearEsc(); S.senior.status='waiting'; sheetOpen=false; render(); }
-function goWelcome(){ clearEsc(); S.screen='welcome'; sheetOpen=false; render(); }
-function chooseRole(r){ S.role=r; S.screen = r==='senior' ? (S.senior.name?'senior':'seniorSetup') : (linked().length?'guardian':'guardianLink'); render(); }
-function setPlan(p){ S.senior.plan=p; render(); }
+async function removeGuardian(id){await supabase.from('guardians').delete().eq('id',id);await loadSeniorData();render();}
+async function setWhatsappDaily(v){await supabase.from('senior_settings').update({whatsapp_daily:v}).eq('senior_id',S.user.id);S.settings.whatsapp_daily=v;render();}
+async function setPlan(p){await supabase.from('senior_settings').update({plan:p}).eq('senior_id',S.user.id);S.settings.plan=p;await loadSeniorData();render();}
 
-/* ---------------- screens ---------------- */
+async function simulateMissed(){
+  clearEsc();sheetOpen=false;
+  await supabase.from('senior_settings').update({status:'grace'}).eq('senior_id',S.user.id);
+  S.settings.status='grace';S.stepIdx=0;S.gpsShared=false;
+  await logEvent('missed','Check-in window passed. Grace period started.');
+  await loadSeniorData();render();
+  CHAIN.forEach((s,i)=>{escTimers.push(setTimeout(async()=>{
+    S.stepIdx=i;
+    if(s.key==='fs'){
+      await supabase.from('senior_settings').update({status:'alert'}).eq('senior_id',S.user.id);
+      S.settings.status='alert';S.gpsShared=true;
+      await logEvent('gps','Location captured on missed check-in: '+LOC.lat+', '+LOC.lng,{lat:LOC.lat,lng:LOC.lng});
+      const targets=S.guardians.filter(g=>g.linked);
+      for(const g of (targets.length?targets:S.guardians.slice(0,1))){await logEvent('alert','Alert to '+g.name+' (push + email): no check-in from senior. Last location '+LOC.place+'.',{channel:'email'});}
+    } else {await logEvent('escalate',s.title+' — '+s.detail);}
+    await loadSeniorData();render();
+  }, (i+1)*3000));});
+}
+async function resetDay(){clearEsc();sheetOpen=false;await supabase.from('senior_settings').update({status:'waiting'}).eq('senior_id',S.user.id);S.settings.status='waiting';S.stepIdx=-1;S.gpsShared=false;await loadSeniorData();render();}
+
+/* ============ data: guardian ============ */
+async function linkByCode(codeStr){
+  try{
+    const {data,error}=await supabase.rpc('link_guardian',{p_code:String(codeStr).trim()});
+    if(error) throw error;
+    S.role='guardian';localStorage.setItem('imfine_role','guardian');
+    await loadGuardianData();render();toast('Linked successfully');
+    return true;
+  }catch(e){return false;}
+}
+async function loadGuardianData(){
+  stopPoll();
+  const {data:links}=await supabase.from('guardians').select('*').eq('guardian_user_id',S.user.id).eq('linked',true).order('created_at');
+  if(!links||!links.length){S.screen='guardianLink';S.gLink=null;return;}
+  S.gLink=links[0];
+  const sid=S.gLink.senior_id;
+  const {data:st}=await supabase.from('senior_settings').select('*').eq('senior_id',sid).maybeSingle();
+  S.settings=st||{status:'waiting'};
+  S.gpsShared=(st&&st.status==='alert');
+  const {data:prof}=await supabase.from('profiles').select('full_name').eq('id',sid).maybeSingle();
+  S.seniorName=(prof&&prof.full_name)||'your loved one';
+  const {data:ev}=await supabase.from('check_in_events').select('*').eq('senior_id',sid).order('created_at',{ascending:false}).limit(12);
+  S.events=ev||[];
+  S.screen='guardian';
+  pollTimer=setInterval(refreshGuardian,5000);
+}
+async function refreshGuardian(){
+  if(S.screen!=='guardian'||!S.gLink)return;
+  const sid=S.gLink.senior_id;
+  const {data:st}=await supabase.from('senior_settings').select('*').eq('senior_id',sid).maybeSingle();
+  if(st){S.settings=st;S.gpsShared=(st.status==='alert');}
+  const {data:ev}=await supabase.from('check_in_events').select('*').eq('senior_id',sid).order('created_at',{ascending:false}).limit(12);
+  S.events=ev||[];render();
+}
+
+/* ============ navigation ============ */
+function goWelcome(){clearEsc();stopPoll();S.screen='welcome';sheetOpen=false;render();}
+async function chooseRole(r){
+  S.role=r;localStorage.setItem('imfine_role',r);
+  if(!S.user){S.screen='auth';render();return;}
+  await routeByRole();
+}
+
+/* ============ screens ============ */
 function screenWelcome(){
   return `<div class="pad center grow" style="display:flex;flex-direction:column">
-    <div style="height:36px"></div>
-    <div class="logo">${I.check}</div>
+    <div style="height:30px"></div><div class="logo">${I.check}</div>
     <h2 style="margin-top:18px">Welcome to IMFine</h2>
     <p class="muted" style="margin-top:4px">How will you use the app?</p>
-    <div style="margin-top:28px;display:flex;flex-direction:column;gap:12px">
-      <button class="choice" data-action="choose-senior">
-        <span class="ic g">${I.user}</span>
-        <span><h3>I'm checking in</h3><p>Tap once a day so your family knows you're okay.</p></span>
-      </button>
-      <button class="choice sky" data-action="choose-guardian">
-        <span class="ic s" style="color:var(--sky)">${I.hands}</span>
-        <span><h3>I'm a Guardian</h3><p>Watch over a loved one and get alerted if they miss a check-in.</p></span>
-      </button>
+    <div style="margin-top:26px;display:flex;flex-direction:column;gap:12px">
+      <button class="choice" data-a="choose-senior"><span class="ic g">${I.user}</span><span><h3>I'm checking in</h3><p>Tap once a day so your family knows you're okay.</p></span></button>
+      <button class="choice sky" data-a="choose-guardian"><span class="ic s" style="color:var(--sky)">${I.hands}</span><span><h3>I'm a Guardian</h3><p>Watch over a loved one and get alerted if they miss a check-in.</p></span></button>
     </div>
-    <p class="tiny" style="margin-top:auto;padding-top:24px">Seniors and Guardians can use different phones. Each installs IMFine and picks their role.</p>
+    <p class="tiny" style="margin-top:auto;padding-top:22px">Seniors and Guardians can use different phones. Each installs IMFine and picks their role.</p>
   </div>`;
 }
-
-function screenSeniorSetup(){
-  return `${topbar("Set up your check-in","go-welcome")}
+function screenAuth(){
+  const su=authMode==='signup';
+  const tint=S.role==='guardian'?'sky':'green';
+  return `${topbar(S.role==='guardian'?'Guardian sign in':'Sign in','go-welcome',tint)}
   <div class="pad grow">
-    <div class="card">
-      <label class="small">Your name</label>
-      <input id="in-name" placeholder="e.g. Margaret" value="${S.senior.name||''}" style="margin-top:6px" />
-      <label class="small" style="display:block;margin-top:14px">Daily check-in time</label>
-      <input id="in-time" type="time" value="${S.senior.checkInTime||'09:00'}" style="margin-top:6px" />
-      <p class="small" style="margin-top:12px">We'll gently remind you each day at this time. One tap is all it takes.</p>
+    <div class="logo" style="width:64px;height:64px;border-radius:20px">${I.check}</div>
+    <h2 class="center" style="margin-top:14px">${su?'Create your account':'Welcome back'}</h2>
+    <p class="muted center" style="margin-top:2px">${su?'It takes a few seconds.':'Sign in to continue.'}</p>
+    <div class="card" style="margin-top:18px">
+      <label class="fl">Email</label><input id="au-email" type="email" placeholder="you@email.com" autocomplete="email" />
+      <label class="fl">Password</label><input id="au-pass" type="password" placeholder="At least 6 characters" autocomplete="${su?'new-password':'current-password'}" />
     </div>
-    <button class="btn btn-green" style="margin-top:16px" data-action="setup-continue">Continue</button>
+    <button class="btn btn-${tint==='sky'?'sky':'green'}" style="margin-top:16px" data-a="auth-go">${su?'Create account':'Sign in'}</button>
+    <p class="center" style="margin-top:14px">${su?'Already have an account?':'New here?'} <button class="link" data-a="auth-toggle">${su?'Sign in':'Create an account'}</button></p>
   </div>`;
 }
-
 function screenSenior(){
-  const s=S.senior; const st=s.status;
-  const theme={ok:'var(--green)',waiting:'var(--slate2)',grace:'var(--amber)',alert:'var(--red)'}[st];
+  const st=S.settings.status||'waiting';const s=S.settings;
+  const linked=S.guardians.filter(g=>g.linked);
   let main='';
   if(st==='waiting'){
-    main=`<div class="okwrap"><button class="okbtn" data-action="check-in">
-      <span class="ring"></span>
-      <span class="disc"><span style="display:flex;flex-direction:column;align-items:center">
-        <span style="width:56px;height:56px">${I.check}</span><span class="lbl">I'm OK</span></span></span>
-    </button></div>
-    <p class="center muted" style="max-width:240px;margin:6px auto 0">Tap once to let your family know you're okay today.</p>`;
+    main=`<div class="okwrap"><button class="okbtn" data-a="check-in"><span class="ring"></span><span class="disc"><span style="display:flex;flex-direction:column;align-items:center"><span style="width:54px;height:54px">${I.check}</span><span class="lbl">I'm OK</span></span></span></button></div><p class="center muted" style="max-width:240px;margin:6px auto 0">Tap once to let your family know you're okay today.</p>`;
   } else if(st==='ok'){
-    main=`<div class="okwrap"><div class="disc done" style="width:210px;height:210px;border-radius:50%;display:grid;place-items:center;color:#fff">
-      <span style="width:80px;height:80px">${I.check}</span></div></div>
-      <p class="center" style="font-size:20px;font-weight:800;margin:8px 0 0">You're all set for today</p>
-      ${(s.whatsappDaily&&linked().length)?`<p class="center" style="color:var(--green-d);font-size:14px;margin-top:4px">Your Guardians got a WhatsApp ✓</p>`:''}`;
-  } else {
-    main=escalationBlock();
-  }
-  const showExtras = st!=='grace'&&st!=='alert';
-  return `${topbar((s.name||'Your')+"'s check-in","go-welcome")}
+    main=`<div class="okwrap"><div class="disc done" style="width:200px;height:200px;border-radius:50%;display:grid;place-items:center;color:#fff"><span style="width:78px;height:78px">${I.check}</span></div></div><p class="center" style="font-size:20px;font-weight:800;margin:8px 0 0">You're all set for today</p>`;
+  } else { main=escalationBlock(); }
+  const extras = (st!=='grace'&&st!=='alert');
+  return `${topbar('Your check-in','open-menu')}
   <div class="center" style="padding:2px 20px 6px"><span class="small">${new Date().toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'})}</span></div>
-  <div class="pad" style="padding-top:6px">
-    ${main}
-    ${showExtras?`
-    <div class="card between" style="margin-top:16px">
-      <div class="row"><span style="width:22px;height:22px;color:var(--green)">${I.chat}</span><span class="small" style="color:var(--ink)">WhatsApp Guardians when I check in</span></div>
-      <button class="toggle ${s.whatsappDaily?'on':''}" data-action="toggle-whatsapp"><span class="dot"></span></button>
-    </div>
-    ${guardianManager()}
-    `:''}
+  <div class="pad" style="padding-top:6px">${main}
+    ${extras?`<div class="card between" style="margin-top:16px"><div class="row"><span style="width:22px;height:22px;color:var(--green)">${I.chat}</span><span class="small" style="color:var(--ink)">Notify Guardians when I check in</span></div><button class="toggle ${s.whatsapp_daily?'on':''}" data-a="toggle-daily"><span class="dot"></span></button></div>${guardianManager()}`:''}
   </div>
-  <button class="fab" data-action="open-test" title="Testing tools">${I.gear}</button>`;
+  <button class="fab" data-a="open-test">${I.gear}</button>`;
 }
-
 function guardianManager(){
-  const s=S.senior;
-  const items = s.guardians.map(g=>`<li class="gitem">
-      <div><div style="font-weight:600;font-size:14px">${g.name}</div>
-      <div class="tiny">${g.linked?'✓ Linked':'Invite code '+g.code}</div></div>
-      <button class="trash" data-action="remove-guardian" data-id="${g.id}">${I.trash}</button>
-    </li>`).join('');
+  const max=S.settings.plan==='free'?1:5;
+  const items=S.guardians.map(g=>`<li class="gitem"><div><div style="font-weight:600;font-size:14px">${g.name}</div><div class="tiny">${g.linked?'✓ Linked':'Share code: '+g.link_code}</div></div><button class="trash" data-a="rm-g" data-id="${g.id}">${I.trash}</button></li>`).join('');
   let adder='';
-  if(s._adding){
-    adder=`<div class="card" style="margin-top:8px;background:#f8fafc">
-      <input id="g-name" placeholder="Guardian's name" />
-      <input id="g-email" placeholder="Guardian's email" style="margin-top:8px" />
-      <p class="tiny" style="margin:8px 0 0">We'll email them a code to link their app.</p>
-      <div class="row" style="margin-top:10px">
-        <button class="btn btn-ghost" data-action="cancel-add">Cancel</button>
-        <button class="btn btn-green" data-action="submit-guardian">Send invite</button>
-      </div></div>`;
-  } else if(s.guardians.length<maxG()){
-    adder=`<button class="btn btn-green" style="margin-top:10px" data-action="show-add">${I.plus}<span>Add a Guardian</span></button>`;
-  } else {
-    adder=`<div class="banner" style="margin-top:10px">Upgrade to Premium to add more Guardians.</div>`;
-  }
-  return `<div class="card" style="margin-top:12px">
-    <div class="between"><span class="row" style="font-weight:700;font-size:14px"><span style="width:18px;height:18px;color:var(--green)">${I.users}</span>My Guardians</span>
-    <span class="tiny">${s.guardians.length}/${maxG()}</span></div>
-    ${s.guardians.length?`<ul class="glist">${items}</ul>`:`<p class="small center" style="padding:8px 0">No Guardians yet. Add someone who'll be alerted.</p>`}
-    ${adder}
-  </div>`;
+  if(S._adding){adder=`<div class="card" style="margin-top:8px;background:#f8fafc"><input id="g-name" placeholder="Guardian's name" /><input id="g-email" placeholder="Guardian's email" style="margin-top:8px" /><p class="tiny" style="margin:8px 0 0">They'll link using the code shown (email sending comes next).</p><div class="row" style="margin-top:10px"><button class="btn btn-ghost" data-a="cancel-add">Cancel</button><button class="btn btn-green" data-a="submit-g">Create invite</button></div></div>`;}
+  else if(S.guardians.length<max){adder=`<button class="btn btn-green" style="margin-top:10px" data-a="show-add">${I.plus}<span>Add a Guardian</span></button>`;}
+  else{adder=`<div class="banner" style="margin-top:10px">Upgrade to Premium to add more Guardians.</div>`;}
+  return `<div class="card" style="margin-top:12px"><div class="between"><span class="row" style="font-weight:700;font-size:14px"><span style="width:18px;height:18px;color:var(--green)">${I.users}</span>My Guardians</span><span class="tiny">${S.guardians.length}/${max}</span></div>${S.guardians.length?`<ul class="glist">${items}</ul>`:`<p class="small center" style="padding:8px 0">No Guardians yet.</p>`}${adder}</div>`;
 }
-
 function escalationBlock(){
-  const s=S.senior; const idx=s.stepIdx==null?-1:s.stepIdx;
-  const steps=CHAIN.map((c,i)=>{
-    const on = i<=idx || s.status==='alert';
-    const fs = c.key==='fs';
-    return `<li class="step ${on?'on':''} ${fs?'fs':''}">
-      <span class="sic" style="width:30px;height:30px">${c.ic}</span>
-      <div><b>${c.title}</b><span class="tiny" style="display:block">${c.detail}</span>
-      <span class="tiny" style="display:block">Production timing: ${c.real}</span></div></li>`;
-  }).join('');
-  const msg = s.gpsShared?`<div class="msgcard">
-      <div class="row" style="color:#6ee7b7;font-size:12px;font-weight:700"><span style="width:15px;height:15px">${I.chat}</span> Sent to ${linked().length||1} Guardian(s)</div>
-      <div style="font-size:14px;margin-top:4px">We haven't heard from ${(s.name||'them')} today. Last location:</div>
-      <div class="maprow"><span style="width:16px;height:16px;color:#f87171">${I.pin}</span><span>${LOC.place} · ${LOC.lat}, ${LOC.lng}</span></div>
-    </div>`:'';
-  return `<button class="btn btn-green" style="font-size:18px;padding:16px" data-action="stop-alerts">I'm OK — stop the alerts</button>
-    <ul class="chain" style="margin-top:14px">${steps}</ul>${msg}`;
+  const idx=S.stepIdx;
+  const steps=CHAIN.map((c,i)=>{const on=i<=idx||S.settings.status==='alert';const fs=c.key==='fs';return `<li class="step ${on?'on':''} ${fs?'fs':''}"><span class="sic" style="width:30px;height:30px">${c.ic}</span><div><b>${c.title}</b><span class="tiny" style="display:block">${c.detail}</span><span class="tiny" style="display:block">Production timing: ${c.real}</span></div></li>`;}).join('');
+  const msg=S.gpsShared?`<div class="msgcard"><div class="row" style="color:#6ee7b7;font-size:12px;font-weight:700"><span style="width:15px;height:15px">${I.chat}</span> Sent to Guardians (push + email)</div><div style="font-size:14px;margin-top:4px">No check-in today. Last location:</div><div class="maprow"><span style="width:16px;height:16px;color:#f87171">${I.pin}</span><span>${LOC.place}</span></div></div>`:'';
+  return `<button class="btn btn-green" style="font-size:18px;padding:16px" data-a="check-in">I'm OK — stop the alerts</button><ul class="chain" style="margin-top:14px">${steps}</ul>${msg}`;
 }
-
 function screenGuardianLink(){
-  const pending=S.senior.guardians.filter(g=>!g.linked);
-  const helper = pending.length?`<div class="banner" style="margin-top:22px"><b>Demo helper (real app emails this):</b>${pending.map(g=>`<div style="margin-top:4px">Code for ${g.name}: <b style="font-family:monospace">${g.code}</b></div>`).join('')}</div>`:'';
-  return `${topbar("Guardian setup","go-welcome","sky")}
-  <div class="pad grow">
-    <div style="width:64px;height:64px;border-radius:20px;background:var(--sky-l);color:var(--sky);display:grid;place-items:center;margin:6px auto 0"><span style="width:32px;height:32px">${I.key}</span></div>
-    <h2 class="center" style="margin-top:14px">Enter your linking code</h2>
-    <p class="muted center" style="margin-top:4px">Ask your loved one to add your email in their app. You'll receive a 6-digit code.</p>
-    <input id="code-in" inputmode="numeric" maxlength="6" placeholder="000000"
-      style="margin-top:22px;text-align:center;font-size:30px;font-weight:800;letter-spacing:8px;border:2px solid var(--sky-b);border-radius:18px;padding:16px" />
-    <p id="code-err" class="center hidden" style="color:var(--red);font-size:14px;margin-top:8px">That code didn't match. Try again.</p>
-    <button class="btn btn-sky" style="margin-top:14px" data-action="link-submit">${I.send}<span>Link to their check-ins</span></button>
-    ${helper}
-  </div>`;
+  return `${topbar('Guardian setup','go-welcome','sky')}
+  <div class="pad grow"><div class="logo" style="width:64px;height:64px;border-radius:20px;background:var(--sky)">${I.key}</div>
+  <h2 class="center" style="margin-top:14px">Enter your linking code</h2>
+  <p class="muted center" style="margin-top:4px">Ask your loved one to share the 6-digit code shown in their app.</p>
+  <input id="code-in" inputmode="numeric" maxlength="6" placeholder="000000" style="margin-top:22px;text-align:center;font-size:30px;font-weight:800;letter-spacing:8px;border:2px solid var(--sky-b);border-radius:18px;padding:16px" />
+  <p id="code-err" class="center hidden" style="color:var(--red);font-size:14px;margin-top:8px">That code is invalid or already used.</p>
+  <button class="btn btn-sky" style="margin-top:14px" data-a="link-go">${I.send}<span>Link to their check-ins</span></button>
+  <p class="center" style="margin-top:16px"><button class="link" data-a="sign-out">Sign out</button></p></div>`;
 }
-
 function screenGuardian(){
-  const s=S.senior; const st=s.status;
-  const th={
-    ok:{bg:'var(--green)',label:'Checked in today',sub:'You\'ll be alerted if a check-in is missed.',ic:I.check},
+  const st=S.settings.status||'waiting';
+  const th={ok:{bg:'var(--green)',label:'Checked in today',sub:'You\'ll be alerted if a check-in is missed.',ic:I.check},
     waiting:{bg:'var(--slate2)',label:'No check-in yet today',sub:'Within their daily window.',ic:I.clock},
     grace:{bg:'var(--amber)',label:'Missed the window',sub:'Reminders are being sent now.',ic:I.bell},
-    alert:{bg:'var(--red)',label:'Missed check-in — you\'ve been alerted',sub:'Please try to reach them.',ic:I.alert},
-  }[st];
-  const feed=s.events.filter(e=>['checkin','reassure','missed','escalate','alert','gps'].includes(e.type)).slice(0,8)
-    .map(e=>`<li class="fitem"><span class="dotc"></span><div><div style="font-size:12px">${e.detail}</div><div class="tiny">${new Date(e.ts).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</div></div></li>`).join('');
-  const gps = s.gpsShared?`<div class="card" style="margin-top:12px;background:var(--red-l);border:1px solid var(--red-b)">
-      <div class="row" style="color:#b91c1c;font-weight:700;font-size:14px"><span style="width:16px;height:16px">${I.pin}</span>Last known location</div>
-      <div style="font-size:14px;margin-top:4px">${LOC.place}</div><div class="tiny">${LOC.lat}, ${LOC.lng}</div></div>`:'';
-  return `${topbar("Watching over "+(s.name||'your loved one'),"go-welcome","sky")}
-  <div class="pad">
-    <div class="statuscard" style="background:${th.bg}">
-      <div class="badge"><span style="width:34px;height:34px">${th.ic}</span></div>
-      <div style="font-size:20px;font-weight:800;margin-top:10px">${th.label}</div>
-      <div style="font-size:14px;opacity:.92;margin-top:2px">${th.sub}</div>
-    </div>
-    ${gps}
-    <p class="small" style="font-weight:700;color:var(--ink);margin:16px 0 6px">Recent activity</p>
-    <ul class="feed">${feed||'<li class="fitem"><span class="dotc"></span><div class="tiny">No activity yet.</div></li>'}</ul>
-  </div>
-  <button class="fab" data-action="open-test" title="Testing tools">${I.gear}</button>`;
+    alert:{bg:'var(--red)',label:'Missed check-in — you\'ve been alerted',sub:'Please try to reach them.',ic:I.alert}}[st];
+  const feed=S.events.filter(e=>['checkin','reassure','missed','escalate','alert','gps'].includes(e.type)).slice(0,8).map(e=>`<li class="fitem"><span class="dotc"></span><div><div style="font-size:12px">${e.detail}</div><div class="tiny">${fmt(e.created_at)}</div></div></li>`).join('');
+  const gps=S.gpsShared?`<div class="card" style="margin-top:12px;background:var(--red-l);border:1px solid var(--red-b)"><div class="row" style="color:#b91c1c;font-weight:700;font-size:14px"><span style="width:16px;height:16px">${I.pin}</span>Last known location</div><div style="font-size:14px;margin-top:4px">${LOC.place}</div><div class="tiny">${LOC.lat}, ${LOC.lng}</div></div>`:'';
+  return `${topbar('Watching over '+S.seniorName,'open-menu','sky')}
+  <div class="pad"><div class="statuscard" style="background:${th.bg}"><div class="badge"><span style="width:34px;height:34px">${th.ic}</span></div><div style="font-size:20px;font-weight:800;margin-top:10px">${th.label}</div><div style="font-size:14px;opacity:.92;margin-top:2px">${th.sub}</div></div>
+  ${gps}<p class="small" style="font-weight:700;color:var(--ink);margin:16px 0 6px">Recent activity</p><ul class="feed">${feed||'<li class="fitem"><span class="dotc"></span><div class="tiny">No activity yet.</div></li>'}</ul></div>
+  <button class="fab" data-a="open-menu">${I.gear}</button>`;
 }
-
-function testSheet(){
-  if(!sheetOpen) return '';
-  return `<div class="sheet"><div class="inner">
-    <div class="between"><b>Testing tools</b><button class="trash" data-action="close-test">${I.trash}</button></div>
-    <p class="tiny" style="margin:4px 0 12px">Only for the test phase — remove before real launch. These let you preview the rescue chain without waiting hours.</p>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <button class="btn btn-amber" data-action="sim-missed">${I.alert}<span>Simulate a missed check-in</span></button>
-      <div class="row">
-        <button class="btn ${S.senior.plan==='free'?'btn-green':'btn-ghost'}" data-action="plan-free">Free plan</button>
-        <button class="btn ${S.senior.plan==='premium'?'btn-green':'btn-ghost'}" data-action="plan-premium">${I.crown}<span>Premium</span></button>
-      </div>
-      <button class="btn btn-ghost" data-action="reset-day">Reset today</button>
-      <button class="btn btn-ghost" data-action="go-welcome">Switch role / Welcome</button>
-    </div>
+function menuSheet(){
+  if(!sheetOpen)return '';
+  const senior=(S.role==='senior');
+  return `<div class="sheet"><div class="inner"><div class="between"><b>${senior?'Testing tools':'Menu'}</b><button class="trash" data-a="close-sheet">${I.trash}</button></div>
+  ${senior?`<p class="tiny" style="margin:4px 0 12px">Testing tools — removed before launch.</p><div style="display:flex;flex-direction:column;gap:8px"><button class="btn btn-amber" data-a="sim-missed">${I.alert}<span>Simulate a missed check-in</span></button><div class="row"><button class="btn ${S.settings.plan==='free'?'btn-green':'btn-ghost'}" data-a="plan-free">Free</button><button class="btn ${S.settings.plan==='premium'?'btn-green':'btn-ghost'}" data-a="plan-premium">Premium</button></div><button class="btn btn-ghost" data-a="reset-day">Reset today</button><button class="btn btn-ghost" data-a="sign-out">Sign out</button></div>`
+  :`<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px"><button class="btn btn-ghost" data-a="sign-out">Sign out</button></div>`}
   </div></div>`;
 }
+function topbar(label,action,tint){const c=tint==='sky'?'var(--sky)':'var(--green-d)';return `<div class="topbar"><button class="back" data-a="${action}">${action==='open-menu'?I.gear:I.back}</button><span class="barlabel" style="color:${c}">${label}</span></div>`;}
 
-function topbar(label,action,tint){
-  const c = tint==='sky'?'var(--sky)':'var(--green-d)';
-  return `<div class="topbar"><button class="back" data-action="${action}">${I.back}</button><span class="barlabel" style="color:${c}">${label}</span></div>`;
-}
-
-/* ---------------- render + events ---------------- */
+/* ============ render ============ */
 function render(){
-  save();
   const app=document.getElementById('app');
   let html='';
   switch(S.screen){
-    case 'welcome': html=screenWelcome(); break;
-    case 'seniorSetup': html=screenSeniorSetup(); break;
-    case 'senior': html=screenSenior(); break;
-    case 'guardianLink': html=screenGuardianLink(); break;
-    case 'guardian': html=screenGuardian(); break;
-    default: html=screenWelcome();
+    case 'loading':html='<div class="spin"></div>';break;
+    case 'welcome':html=screenWelcome();break;
+    case 'auth':html=screenAuth();break;
+    case 'senior':html=screenSenior();break;
+    case 'guardianLink':html=screenGuardianLink();break;
+    case 'guardian':html=screenGuardian();break;
+    default:html=screenWelcome();
   }
-  app.innerHTML = html + testSheet();
-  document.querySelector('meta[name=theme-color]').setAttribute('content',
-    S.screen==='guardian'||S.screen==='guardianLink'?'#0284c7':'#10b981');
+  app.innerHTML=html+menuSheet();
+  document.querySelector('meta[name=theme-color]').setAttribute('content',(S.screen==='guardian'||S.screen==='guardianLink'||(S.screen==='auth'&&S.role==='guardian'))?'#0284c7':'#10b981');
 }
 
-document.getElementById('app').addEventListener('click',(e)=>{
-  const t=e.target.closest('[data-action]');
-  // sheet backdrop close
-  if(e.target.classList && e.target.classList.contains('sheet')){ sheetOpen=false; render(); return; }
-  if(!t) return;
-  const a=t.getAttribute('action')||t.getAttribute('data-action');
+/* ============ events ============ */
+document.getElementById('app').addEventListener('click',async(e)=>{
+  if(e.target.classList&&e.target.classList.contains('sheet')){sheetOpen=false;render();return;}
+  const t=e.target.closest('[data-a]');if(!t)return;
+  const a=t.getAttribute('data-a');
   switch(a){
-    case 'choose-senior': chooseRole('senior'); break;
-    case 'choose-guardian': chooseRole('guardian'); break;
-    case 'setup-continue': {
-      S.senior.name=(document.getElementById('in-name').value||'').trim()||'You';
-      S.senior.checkInTime=document.getElementById('in-time').value||'09:00';
-      S.screen='senior'; render(); break;
-    }
-    case 'check-in': checkIn(); break;
-    case 'stop-alerts': stopAlerts(); break;
-    case 'toggle-whatsapp': toggleWhatsapp(); break;
-    case 'show-add': S.senior._adding=true; render(); break;
-    case 'cancel-add': S.senior._adding=false; render(); break;
-    case 'submit-guardian': {
-      const n=(document.getElementById('g-name').value||'').trim();
-      const em=(document.getElementById('g-email').value||'').trim();
-      if(n&&em){ S.senior._adding=false; addGuardian(n,em); } break;
-    }
-    case 'remove-guardian': removeGuardian(t.getAttribute('data-id')); break;
-    case 'go-welcome': goWelcome(); break;
-    case 'link-submit': {
-      const v=document.getElementById('code-in').value;
-      if(!linkByCode(v)){ document.getElementById('code-err').classList.remove('hidden'); }
-      break;
-    }
-    case 'open-test': sheetOpen=true; render(); break;
-    case 'close-test': sheetOpen=false; render(); break;
-    case 'sim-missed': simulateMissed(); break;
-    case 'reset-day': resetDay(); break;
-    case 'plan-free': setPlan('free'); break;
-    case 'plan-premium': setPlan('premium'); break;
+    case 'choose-senior':await chooseRole('senior');break;
+    case 'choose-guardian':await chooseRole('guardian');break;
+    case 'auth-toggle':authMode=(authMode==='signup'?'signin':'signup');render();break;
+    case 'auth-go':{const em=document.getElementById('au-email').value.trim();const pw=document.getElementById('au-pass').value;if(!em||!pw){toast('Enter email and password');break;}t.disabled=true;await doAuth(em,pw);break;}
+    case 'check-in':await checkIn();break;
+    case 'toggle-daily':await setWhatsappDaily(!S.settings.whatsapp_daily);break;
+    case 'show-add':S._adding=true;render();break;
+    case 'cancel-add':S._adding=false;render();break;
+    case 'submit-g':{const n=document.getElementById('g-name').value.trim();const em=document.getElementById('g-email').value.trim();if(n&&em){S._adding=false;await addGuardian(n,em);}break;}
+    case 'rm-g':await removeGuardian(t.getAttribute('data-id'));break;
+    case 'go-welcome':goWelcome();break;
+    case 'link-go':{const v=document.getElementById('code-in').value;const ok=await linkByCode(v);if(!ok)document.getElementById('code-err').classList.remove('hidden');break;}
+    case 'open-menu':sheetOpen=true;render();break;
+    case 'open-test':sheetOpen=true;render();break;
+    case 'close-sheet':sheetOpen=false;render();break;
+    case 'sim-missed':await simulateMissed();break;
+    case 'reset-day':await resetDay();break;
+    case 'plan-free':await setPlan('free');break;
+    case 'plan-premium':await setPlan('premium');break;
+    case 'sign-out':await signOut();break;
   }
 });
-/* ---------------- boot ---------------- */
-render();
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
-}
+
+/* ============ boot ============ */
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+boot();
 </script>
 </body>
 </html>
