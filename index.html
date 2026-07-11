@@ -136,6 +136,28 @@ function pushCard(){
   if(typeof Notification==='undefined'||Notification.permission==='granted') return '';
   return `<div class="card between" style="margin-top:12px"><div class="row"><span style="width:22px;height:22px;color:var(--green)">${I.bell}</span><span class="small" style="color:var(--ink)">Turn on notifications</span></div><button class="btn btn-green" style="width:auto;padding:9px 16px" data-a="enable-push">Enable</button></div>`;
 }
+async function upgradeTo(plan){
+  try{
+    const {data:{session}}=await supabase.auth.getSession();
+    const token=session&&session.access_token;
+    if(!token){toast('Please sign in first');return;}
+    toast('Opening secure checkout…');
+    const r=await fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({plan})});
+    const j=await r.json();
+    if(j.url){ window.location.href=j.url; } else { toast(j.error||'Could not start checkout'); }
+  }catch(e){ toast(e.message||'Checkout error'); }
+}
+function upgradeCard(){
+  if(S.settings&&S.settings.plan==='premium') return '';
+  return `<div class="card" style="margin-top:12px">
+    <div class="row" style="justify-content:space-between"><span class="row" style="font-weight:700;font-size:14px"><span style="width:18px;height:18px;color:var(--amber)">${I.crown}</span>Upgrade to Premium</span></div>
+    <p class="tiny" style="margin:6px 0 10px">Up to 5 Guardians, voice-call alerts, and more.</p>
+    <div class="row">
+      <button class="btn btn-green" data-a="upgrade-monthly">SGD 2.99 / month</button>
+      <button class="btn btn-ghost" data-a="upgrade-yearly">SGD 24.99 / year</button>
+    </div>
+  </div>`;
+}
 
 
 /* ============ icons ============ */
@@ -179,6 +201,10 @@ function stopPoll(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
 
 /* ============ auth ============ */
 async function boot(){
+  if(new URLSearchParams(location.search).get('upgraded')){
+    toast('Payment received (test). Premium activates shortly.');
+    history.replaceState({},'',location.pathname);
+  }
   const {data:{session}}=await supabase.auth.getSession();
   S.user=session?.user||null;
   if(!S.user){S.screen='welcome';return render();}
@@ -370,7 +396,7 @@ function screenSenior(){
   return `${topbar('Your check-in','open-menu')}
   <div class="center" style="padding:2px 20px 6px"><span class="small">${new Date().toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'})}</span></div>
   <div class="pad" style="padding-top:6px">${main}
-    ${extras?`${pushCard()}<div class="card between" style="margin-top:16px"><div class="row"><span style="width:22px;height:22px;color:var(--green)">${I.chat}</span><span class="small" style="color:var(--ink)">Notify Guardians when I check in</span></div><button class="toggle ${s.whatsapp_daily?'on':''}" data-a="toggle-daily"><span class="dot"></span></button></div>${guardianManager()}`:''}
+    ${extras?`${pushCard()}${upgradeCard()}<div class="card between" style="margin-top:16px"><div class="row"><span style="width:22px;height:22px;color:var(--green)">${I.chat}</span><span class="small" style="color:var(--ink)">Notify Guardians when I check in</span></div><button class="toggle ${s.whatsapp_daily?'on':''}" data-a="toggle-daily"><span class="dot"></span></button></div>${guardianManager()}`:''}
   </div>
   <button class="fab" data-a="open-test">${I.gear}</button>`;
 }
@@ -453,6 +479,8 @@ document.getElementById('app').addEventListener('click',async(e)=>{
     case 'save-setup':{const n=document.getElementById('se-name').value.trim();const tm=document.getElementById('se-time').value||'09:00';if(!n){toast('Please enter your name');break;}await saveSeniorSetup(n,tm);break;}
     case 'edit-details':sheetOpen=false;S.screen='seniorSetup';render();break;
     case 'enable-push':await subscribePush();break;
+    case 'upgrade-monthly':await upgradeTo('monthly');break;
+    case 'upgrade-yearly':await upgradeTo('yearly');break;
     case 'go-senior':S.screen='senior';render();break;
     case 'check-in':await checkIn();break;
     case 'toggle-daily':await setWhatsappDaily(!S.settings.whatsapp_daily);break;
