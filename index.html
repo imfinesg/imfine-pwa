@@ -349,6 +349,8 @@ function screenWelcome(){
       <button class="choice sky" data-a="choose-guardian"><span class="ic s" style="color:var(--sky)">${I.hands}</span><span><h3>I'm a Guardian</h3><p>Watch over a loved one and get alerted if they miss a check-in.</p></span></button>
     </div>
     <p class="tiny" style="margin-top:auto;padding-top:22px">Seniors and Guardians can use different phones. Each installs IMFine and picks their role.</p>
+    <p class="tiny" style="margin-top:14px;color:var(--slate)">IMFine is a check-in reminder — not a medical, monitoring, or emergency service, and not a substitute for emergency services. In an emergency, call your local emergency number.</p>
+    <p class="tiny" style="margin-top:8px">By continuing you agree to our <a href="terms.html" target="_blank" style="color:var(--green-d)">Terms</a> and <a href="privacy.html" target="_blank" style="color:var(--green-d)">Privacy Policy</a>.</p>
   </div>`;
 }
 function screenAuth(){
@@ -442,9 +444,11 @@ function screenGuardian(){
 function menuSheet(){
   if(!sheetOpen)return '';
   const senior=(S.role==='senior');
-  return `<div class="sheet"><div class="inner"><div class="between"><b>${senior?'Testing tools':'Menu'}</b><button class="trash" data-a="close-sheet">${I.trash}</button></div>
-  ${senior?`<p class="tiny" style="margin:4px 0 12px">Testing tools — removed before launch.</p><div style="display:flex;flex-direction:column;gap:8px"><button class="btn btn-green" data-a="enable-push">${I.bell}<span>Turn on notifications</span></button><button class="btn btn-amber" data-a="sim-missed">${I.alert}<span>Simulate a missed check-in</span></button><div class="row"><button class="btn ${S.settings.plan==='free'?'btn-green':'btn-ghost'}" data-a="plan-free">Free</button><button class="btn ${S.settings.plan==='premium'?'btn-green':'btn-ghost'}" data-a="plan-premium">Premium</button></div><button class="btn btn-ghost" data-a="reset-day">Reset today</button><button class="btn btn-ghost" data-a="edit-details">Edit name &amp; time</button><button class="btn btn-ghost" data-a="sign-out">Sign out</button></div>`
+  const legal=`<div style="text-align:center;margin-top:12px"><a href="terms.html" target="_blank" style="color:var(--slate);font-size:12px;text-decoration:underline">Terms</a> &nbsp;·&nbsp; <a href="privacy.html" target="_blank" style="color:var(--slate);font-size:12px;text-decoration:underline">Privacy Policy</a></div><p class="tiny" style="text-align:center;margin-top:8px">IMFine is a check-in reminder, not a medical or emergency service.</p>`;
+  return `<div class="sheet"><div class="inner"><div class="between"><b>Settings</b><button class="trash" data-a="close-sheet">${I.trash}</button></div>
+  ${senior?`<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px"><button class="btn btn-green" data-a="enable-push">${I.bell}<span>Turn on notifications</span></button><button class="btn btn-ghost" data-a="edit-details">Edit name &amp; time</button><button class="btn btn-ghost" data-a="sign-out">Sign out</button></div>`
   :`<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px"><button class="btn btn-green" data-a="enable-push">${I.bell}<span>Turn on notifications</span></button><button class="btn btn-ghost" data-a="sign-out">Sign out</button></div>`}
+  ${legal}
   </div></div>`;
 }
 function topbar(label,action,tint){const c=tint==='sky'?'var(--sky)':'var(--green-d)';return `<div class="topbar"><button class="back" data-a="${action}">${action==='open-menu'?I.gear:I.back}</button><span class="barlabel" style="color:${c}">${label}</span></div>`;}
