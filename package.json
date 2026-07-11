@@ -5,6 +5,8 @@
   "type": "module",
   "dependencies": {
     "nodemailer": "^6.9.16",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "stripe": "^17.5.0",
+    "@supabase/supabase-js": "^2.45.0"
   }
 }
