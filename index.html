@@ -246,7 +246,7 @@ async function openExternal(url){
           await loadSeniorData(); render();
         });
       }catch(_){}
-      await P.Browser.open({url, presentationStyle:'popover'});
+      await P.Browser.open({url});
       return;
     }
   }
@@ -649,7 +649,17 @@ document.getElementById('app').addEventListener('click',async(e)=>{
 });
 
 /* ============ boot ============ */
-if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+// Service worker is for the WEB/PWA only. Inside the native app it caches
+// pages and causes stale or blank screens after each deploy, so we disable
+// it there and remove any copy left over from earlier installs.
+if (isNative()) {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(()=>{});
+    if (window.caches && caches.keys) caches.keys().then(ks => ks.forEach(k => caches.delete(k))).catch(()=>{});
+  }
+} else if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
 boot();
 </script>
 </body>
