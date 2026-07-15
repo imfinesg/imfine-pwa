@@ -47,8 +47,8 @@ export default async function handler(req, res) {
       customer_email: user.email,
       metadata: { senior_id: target, payer_user_id: user.id, plan },
       subscription_data: { metadata: { senior_id: target, payer_user_id: user.id, plan } },
-      success_url: APP_URL + "?upgraded=1",
-      cancel_url: APP_URL,
+      success_url: APP_URL + "return.html",
+      cancel_url: APP_URL + "return.html?cancelled=1",
     });
 
     return res.status(200).json({ url: session.url });
