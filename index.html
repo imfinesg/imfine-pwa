@@ -230,8 +230,27 @@ async function upgradeTo(plan){
     toast('Opening secure checkout…');
     const r=await fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({plan})});
     const j=await r.json();
-    if(j.url){ window.location.href=j.url; } else { toast(j.error||'Could not start checkout'); }
+    if(j.url){ await openExternal(j.url); } else { toast(j.error||'Could not start checkout'); }
   }catch(e){ toast(e.message||'Checkout error'); }
+}
+// On native, open external pages in an in-app browser (with a Done button)
+// so the user can close it and come straight back to IMFine.
+async function openExternal(url){
+  if(isNative()){
+    const P = window.Capacitor && window.Capacitor.Plugins;
+    if(P && P.Browser){
+      try{
+        await P.Browser.removeAllListeners();
+        await P.Browser.addListener('browserFinished', async ()=>{
+          // Refresh plan/state when they close the Stripe page.
+          await loadSeniorData(); render();
+        });
+      }catch(_){}
+      await P.Browser.open({url, presentationStyle:'popover'});
+      return;
+    }
+  }
+  window.location.href = url;
 }
 async function openPortal(){
   try{
@@ -241,7 +260,7 @@ async function openPortal(){
     toast('Opening your subscription…');
     const r=await fetch('/api/create-portal',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token}});
     const j=await r.json();
-    if(j.url){ window.location.href=j.url; } else { toast(j.error||'Could not open subscription'); }
+    if(j.url){ await openExternal(j.url); } else { toast(j.error||'Could not open subscription'); }
   }catch(e){ toast(e.message||'Portal error'); }
 }
 function planCard(){
