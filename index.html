@@ -20,7 +20,8 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-  #app{max-width:480px;margin:0 auto;min-height:100dvh;background:var(--green-l);display:flex;flex-direction:column;overflow:hidden;position:relative}
+  #app{max-width:480px;margin:0 auto;min-height:100dvh;background:var(--green-l);display:flex;flex-direction:column;overflow:hidden;position:relative;
+    padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
   .pad{padding:22px 20px}
   .center{text-align:center}
   h2{font-size:26px;font-weight:800;margin:0}
@@ -47,8 +48,9 @@
   label.fl{font-size:13px;color:var(--slate);display:block;margin-top:12px;margin-bottom:5px}
   input{width:100%;border:1px solid var(--line);border-radius:14px;padding:13px 14px;font-size:16px;outline:none;background:#fff}
   input:focus{border-color:var(--green)}
-  .topbar{display:flex;align-items:center;gap:10px;padding:14px 16px 6px}
-  .back{width:38px;height:38px;border-radius:50%;background:#fff;border:0;display:grid;place-items:center;box-shadow:0 1px 3px rgba(15,23,42,.08);cursor:pointer}
+  .topbar{display:flex;align-items:center;gap:10px;padding:18px 16px 8px;position:relative;z-index:5}
+  .back{width:44px;height:44px;border-radius:50%;background:#fff;border:0;display:grid;place-items:center;box-shadow:0 1px 3px rgba(15,23,42,.08);cursor:pointer;flex:none}
+  .back svg{width:22px;height:22px}
   .barlabel{font-weight:700;font-size:14px}
   .okwrap{display:grid;place-items:center;margin:10px 0}
   .okbtn{position:relative;border:0;background:transparent;cursor:pointer}
@@ -81,9 +83,10 @@
   .feed{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
   .fitem{display:flex;gap:8px;align-items:flex-start;background:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 1px 2px rgba(15,23,42,.05)}
   .fitem .dotc{width:8px;height:8px;border-radius:50%;background:var(--sky);margin-top:6px;flex:none}
-  .fab{position:absolute;right:14px;bottom:16px;width:48px;height:48px;border-radius:50%;background:var(--ink);color:#fff;border:0;display:grid;place-items:center;box-shadow:0 8px 18px rgba(15,23,42,.25);cursor:pointer;z-index:20}
-  .sheet{position:absolute;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:flex-end;z-index:30}
-  .sheet .inner{background:#fff;width:100%;border-radius:22px 22px 0 0;padding:18px}
+  .fab{position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom));width:52px;height:52px;border-radius:50%;background:var(--ink);color:#fff;border:0;display:grid;place-items:center;box-shadow:0 8px 18px rgba(15,23,42,.25);cursor:pointer;z-index:20}
+  .fab svg{width:24px;height:24px}
+  .sheet{position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:flex-end;z-index:30}
+  .sheet .inner{background:#fff;width:100%;max-width:480px;margin:0 auto;border-radius:22px 22px 0 0;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
   .hidden{display:none !important}
   .banner{background:var(--amber-l);color:#92610a;border-radius:14px;padding:10px 12px;font-size:12px}
   .codebox{font-family:monospace;font-size:26px;font-weight:800;letter-spacing:6px;text-align:center;background:var(--green-l);border:2px dashed var(--green-b);border-radius:14px;padding:12px;color:var(--green-d)}
@@ -229,6 +232,29 @@ async function upgradeTo(plan){
     const j=await r.json();
     if(j.url){ window.location.href=j.url; } else { toast(j.error||'Could not start checkout'); }
   }catch(e){ toast(e.message||'Checkout error'); }
+}
+async function openPortal(){
+  try{
+    const {data:{session}}=await supabase.auth.getSession();
+    const token=session&&session.access_token;
+    if(!token){toast('Please sign in first');return;}
+    toast('Opening your subscription…');
+    const r=await fetch('/api/create-portal',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token}});
+    const j=await r.json();
+    if(j.url){ window.location.href=j.url; } else { toast(j.error||'Could not open subscription'); }
+  }catch(e){ toast(e.message||'Portal error'); }
+}
+function planCard(){
+  const premium = S.settings && S.settings.plan==='premium';
+  if(!premium) return '';
+  return `<div class="card" style="margin-top:12px">
+    <div class="between">
+      <span class="row" style="font-weight:700;font-size:14px"><span style="width:18px;height:18px;color:var(--amber)">${I.crown}</span>Premium plan</span>
+      <span class="pill">Active</span>
+    </div>
+    <p class="tiny" style="margin:6px 0 10px">Up to 5 Guardians and extra alert channels.</p>
+    <button class="btn btn-ghost" data-a="open-portal">Manage or cancel subscription</button>
+  </div>`;
 }
 function upgradeCard(){
   if(S.settings&&S.settings.plan==='premium') return '';
@@ -494,7 +520,7 @@ function screenSenior(){
   return `${topbar('Your check-in','open-menu')}
   <div class="center" style="padding:2px 20px 6px"><span class="small">${new Date().toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'})}</span></div>
   <div class="pad" style="padding-top:6px">${main}
-    ${extras?`${pushCard()}${upgradeCard()}<div class="card between" style="margin-top:16px"><div class="row"><span style="width:22px;height:22px;color:var(--green)">${I.chat}</span><span class="small" style="color:var(--ink)">Notify Guardians when I check in</span></div><button class="toggle ${s.whatsapp_daily?'on':''}" data-a="toggle-daily"><span class="dot"></span></button></div>${guardianManager()}`:''}
+    ${extras?`${pushCard()}${planCard()}${upgradeCard()}<div class="card between" style="margin-top:16px"><div class="row"><span style="width:22px;height:22px;color:var(--green)">${I.chat}</span><span class="small" style="color:var(--ink)">Notify Guardians when I check in</span></div><button class="toggle ${s.whatsapp_daily?'on':''}" data-a="toggle-daily"><span class="dot"></span></button></div>${guardianManager()}`:''}
   </div>
   <button class="fab" data-a="open-test">${I.gear}</button>`;
 }
@@ -581,6 +607,7 @@ document.getElementById('app').addEventListener('click',async(e)=>{
     case 'enable-push':await subscribePush();break;
     case 'disable-push':await unsubscribePush();break;
     case 'upgrade-monthly':await upgradeTo('monthly');break;
+    case 'open-portal':await openPortal();break;
     case 'upgrade-yearly':await upgradeTo('yearly');break;
     case 'go-senior':S.screen='senior';render();break;
     case 'check-in':await checkIn();break;
