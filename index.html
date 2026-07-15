@@ -395,10 +395,40 @@ async function saveSeniorSetup(name,time){
 async function logEvent(type,detail,extra={}){
   await supabase.from('check_in_events').insert(Object.assign({senior_id:S.user.id,type,detail},extra));
 }
+/* ============ privacy-first location ============
+   Captured ONLY when the senior taps "I'm OK" — never tracked in between.
+   If they later go missing, Guardians receive this last known location. */
+async function getLocation(){
+  try{
+    if(isNative()){
+      const P = window.Capacitor && window.Capacitor.Plugins;
+      if(P && P.Geolocation){
+        let perm = await P.Geolocation.checkPermissions();
+        if(perm.location !== 'granted') perm = await P.Geolocation.requestPermissions();
+        if(perm.location !== 'granted') return null;
+        const pos = await P.Geolocation.getCurrentPosition({enableHighAccuracy:true, timeout:10000});
+        return {lat:pos.coords.latitude, lng:pos.coords.longitude};
+      }
+      return null;
+    }
+    if(!navigator.geolocation) return null;
+    return await new Promise((resolve)=>{
+      navigator.geolocation.getCurrentPosition(
+        p => resolve({lat:p.coords.latitude, lng:p.coords.longitude}),
+        () => resolve(null),
+        {enableHighAccuracy:true, timeout:10000, maximumAge:60000}
+      );
+    });
+  }catch(_){ return null; }
+}
+
 async function checkIn(){
   clearEsc();
-  await supabase.from('senior_settings').update({status:'ok',last_check_in_at:new Date().toISOString()}).eq('senior_id',S.user.id);
-  await logEvent('checkin','Tapped "I\'m OK".');
+  const upd={status:'ok', last_check_in_at:new Date().toISOString()};
+  const loc = await getLocation();
+  if(loc){ upd.last_lat=loc.lat; upd.last_lng=loc.lng; upd.last_location_at=new Date().toISOString(); }
+  await supabase.from('senior_settings').update(upd).eq('senior_id',S.user.id);
+  await logEvent('checkin','Tapped "I\'m OK".' + (loc?' Location saved for safety.':''), loc?{lat:loc.lat,lng:loc.lng}:{});
   const linked=S.guardians.filter(g=>g.linked);
   if(S.settings.whatsapp_daily){for(const g of linked){await logEvent('reassure','Reassurance queued for '+g.name+' (email/push).',{channel:'email'});}}
   await loadSeniorData();render();toast('Checked in — you\'re all set for today');
@@ -575,7 +605,15 @@ function screenGuardian(){
     grace:{bg:'var(--amber)',label:'Missed the window',sub:'Reminders are being sent now.',ic:I.bell},
     alert:{bg:'var(--red)',label:'Missed check-in — you\'ve been alerted',sub:'Please try to reach them.',ic:I.alert}}[st];
   const feed=S.events.filter(e=>['checkin','reassure','missed','escalate','alert','gps'].includes(e.type)).slice(0,8).map(e=>`<li class="fitem"><span class="dotc"></span><div><div style="font-size:12px">${e.detail}</div><div class="tiny">${fmt(e.created_at)}</div></div></li>`).join('');
-  const gps=S.gpsShared?`<div class="card" style="margin-top:12px;background:var(--red-l);border:1px solid var(--red-b)"><div class="row" style="color:#b91c1c;font-weight:700;font-size:14px"><span style="width:16px;height:16px">${I.pin}</span>Last known location</div><div style="font-size:14px;margin-top:4px">${LOC.place}</div><div class="tiny">${LOC.lat}, ${LOC.lng}</div></div>`:'';
+  const hasLoc = S.settings && S.settings.last_lat != null;
+  const seen = (S.settings && S.settings.last_location_at) ? new Date(S.settings.last_location_at).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
+  const gps=S.gpsShared?`<div class="card" style="margin-top:12px;background:var(--red-l);border:1px solid var(--red-b)">
+    <div class="row" style="color:#b91c1c;font-weight:700;font-size:14px"><span style="width:16px;height:16px">${I.pin}</span>Last known location</div>
+    ${hasLoc?`<div style="font-size:14px;margin-top:4px">${S.settings.last_lat.toFixed(5)}, ${S.settings.last_lng.toFixed(5)}</div>
+      <div class="tiny">Recorded at their last check-in${seen?' · '+seen:''}</div>
+      <a href="https://maps.google.com/?q=${S.settings.last_lat},${S.settings.last_lng}" target="_blank" style="display:block;margin-top:10px;text-align:center;background:#b91c1c;color:#fff;text-decoration:none;font-weight:700;padding:11px;border-radius:12px">Open in Maps</a>`
+    :`<div class="tiny" style="margin-top:4px">No location recorded. They may not have granted location access.</div>`}
+  </div>`:'';
   return `${topbar('Watching over '+S.seniorName,'open-menu','sky')}
   <div class="pad"><div class="statuscard" style="background:${th.bg}"><div class="badge"><span style="width:34px;height:34px">${th.ic}</span></div><div style="font-size:20px;font-weight:800;margin-top:10px">${th.label}</div><div style="font-size:14px;opacity:.92;margin-top:2px">${th.sub}</div></div>
   ${gps}${pushCard()}<p class="small" style="font-weight:700;color:var(--ink);margin:16px 0 6px">Recent activity</p><ul class="feed">${feed||'<li class="fitem"><span class="dotc"></span><div class="tiny">No activity yet.</div></li>'}</ul></div>
