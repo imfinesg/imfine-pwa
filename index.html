@@ -116,48 +116,47 @@ function urlB64ToUint8(b64){
 }
 /* ============ native (Capacitor) push detection ============ */
 const isNative = () => !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-let NativePush = null;
-async function loadNativePush(){
+const nativePlatform = () => (window.Capacitor && window.Capacitor.getPlatform) ? window.Capacitor.getPlatform() : 'web';
+// Capacitor plugins are compiled INTO the app and exposed on window.Capacitor.Plugins.
+function loadNativePush(){
   if(!isNative()) return null;
-  if(NativePush) return NativePush;
-  try{
-    const m = await import('https://esm.sh/@capacitor/push-notifications@8');
-    NativePush = m.PushNotifications;
-    return NativePush;
-  }catch(e){ return null; }
+  const P = window.Capacitor && window.Capacitor.Plugins;
+  return (P && P.PushNotifications) ? P.PushNotifications : null;
 }
 async function registerNativePush(){
-  const PN = await loadNativePush();
-  if(!PN) { toast('Native push unavailable'); return false; }
+  const PN = loadNativePush();
+  if(!PN) { toast('Push plugin not found in this build'); return false; }
   return new Promise(async (resolve)=>{
     let settled=false;
+    const done=(v)=>{ if(!settled){settled=true;resolve(v);} };
     try{
+      try{ await PN.removeAllListeners(); }catch(_){}
       // Save the device token when iOS hands it to us.
       await PN.addListener('registration', async (t)=>{
         try{
           await supabase.from('native_push_tokens').delete().eq('user_id',S.user.id);
-          await supabase.from('native_push_tokens').insert({user_id:S.user.id, token:t.value, platform:'ios'});
+          await supabase.from('native_push_tokens').insert({user_id:S.user.id, token:t.value, platform:nativePlatform()==='android'?'android':'ios'});
           S.pushSubscribed=true; sheetOpen=false; render(); toast('Notifications turned on ✓');
-        }catch(e){ toast('Could not save device token'); }
-        if(!settled){settled=true;resolve(true);}
+        }catch(e){ toast('Could not save device token: '+(e.message||'')); }
+        done(true);
       });
       await PN.addListener('registrationError', (e)=>{
-        toast('Push registration failed');
-        if(!settled){settled=true;resolve(false);}
+        toast('Push registration failed: '+((e&&(e.error||e.message))||''));
+        done(false);
       });
       // Tapping a notification opens the app.
       await PN.addListener('pushNotificationActionPerformed', ()=>{ boot(); });
 
       let perm = await PN.checkPermissions();
       if(perm.receive !== 'granted') perm = await PN.requestPermissions();
-      if(perm.receive !== 'granted'){ toast('Notifications were not enabled.'); if(!settled){settled=true;resolve(false);} return; }
+      if(perm.receive !== 'granted'){ toast('Notifications were not enabled.'); done(false); return; }
       await PN.register();
-    }catch(e){ toast(e.message||'Push error'); if(!settled){settled=true;resolve(false);} }
+    }catch(e){ toast(e.message||'Push error'); done(false); }
   });
 }
 async function unregisterNativePush(){
   try{
-    const PN = await loadNativePush();
+    const PN = loadNativePush();
     if(PN) { try{ await PN.removeAllListeners(); }catch(_){} }
     await supabase.from('native_push_tokens').delete().eq('user_id',S.user.id);
     S.pushSubscribed=false; sheetOpen=false; render(); toast('Notifications turned off');
@@ -184,8 +183,9 @@ async function subscribePush(){
     if(!('serviceWorker' in navigator)||!('PushManager' in window)||typeof Notification==='undefined'){
       toast('Notifications aren\'t supported here. On iPhone, add IMFine to your Home Screen first.');return;
     }
+    toast('Requesting permission…');
     const perm=await Notification.requestPermission();
-    if(perm!=='granted'){toast('Notifications were not enabled.');return;}
+    if(perm!=='granted'){toast('Permission was '+perm+'. Enable notifications for IMFine in your phone settings.');return;}
     const reg=await navigator.serviceWorker.ready;
     let key=VAPID_PUBLIC;
     try{ const kr=await fetch('/api/send-push',{cache:'no-store'}); const kj=await kr.json(); if(kj&&kj.vapidPublicKey) key=kj.vapidPublicKey; }catch(_){}
