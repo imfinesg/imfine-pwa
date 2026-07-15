@@ -37,9 +37,11 @@ export default async function handler(req, res) {
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    // No return_url: the app opens this in an in-app browser, and the user
+    // closes it with the X / Done button. A "Return to..." link would reload
+    // the whole app inside the browser, which is confusing.
     const session = await stripe.billingPortal.sessions.create({
       customer: sub.stripe_customer_id,
-      return_url: APP_URL,
     });
     return res.status(200).json({ url: session.url });
   } catch (e) {
