@@ -114,8 +114,64 @@ function urlB64ToUint8(b64){
   for(let i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i);
   return arr;
 }
+/* ============ native (Capacitor) push detection ============ */
+const isNative = () => !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+let NativePush = null;
+async function loadNativePush(){
+  if(!isNative()) return null;
+  if(NativePush) return NativePush;
+  try{
+    const m = await import('https://esm.sh/@capacitor/push-notifications@8');
+    NativePush = m.PushNotifications;
+    return NativePush;
+  }catch(e){ return null; }
+}
+async function registerNativePush(){
+  const PN = await loadNativePush();
+  if(!PN) { toast('Native push unavailable'); return false; }
+  return new Promise(async (resolve)=>{
+    let settled=false;
+    try{
+      // Save the device token when iOS hands it to us.
+      await PN.addListener('registration', async (t)=>{
+        try{
+          await supabase.from('native_push_tokens').delete().eq('user_id',S.user.id);
+          await supabase.from('native_push_tokens').insert({user_id:S.user.id, token:t.value, platform:'ios'});
+          S.pushSubscribed=true; sheetOpen=false; render(); toast('Notifications turned on ✓');
+        }catch(e){ toast('Could not save device token'); }
+        if(!settled){settled=true;resolve(true);}
+      });
+      await PN.addListener('registrationError', (e)=>{
+        toast('Push registration failed');
+        if(!settled){settled=true;resolve(false);}
+      });
+      // Tapping a notification opens the app.
+      await PN.addListener('pushNotificationActionPerformed', ()=>{ boot(); });
+
+      let perm = await PN.checkPermissions();
+      if(perm.receive !== 'granted') perm = await PN.requestPermissions();
+      if(perm.receive !== 'granted'){ toast('Notifications were not enabled.'); if(!settled){settled=true;resolve(false);} return; }
+      await PN.register();
+    }catch(e){ toast(e.message||'Push error'); if(!settled){settled=true;resolve(false);} }
+  });
+}
+async function unregisterNativePush(){
+  try{
+    const PN = await loadNativePush();
+    if(PN) { try{ await PN.removeAllListeners(); }catch(_){} }
+    await supabase.from('native_push_tokens').delete().eq('user_id',S.user.id);
+    S.pushSubscribed=false; sheetOpen=false; render(); toast('Notifications turned off');
+  }catch(e){ toast('Could not turn off notifications'); }
+}
+
 async function refreshPushState(){
   try{
+    if(isNative()){
+      if(!S.user){S.pushSubscribed=false;return;}
+      const {data}=await supabase.from('native_push_tokens').select('id').eq('user_id',S.user.id).limit(1);
+      S.pushSubscribed=!!(data&&data.length);
+      return;
+    }
     if(!('serviceWorker' in navigator)||!('PushManager' in window)){S.pushSubscribed=false;return;}
     const reg=await navigator.serviceWorker.ready;
     const sub=await reg.pushManager.getSubscription();
@@ -123,6 +179,7 @@ async function refreshPushState(){
   }catch(_){ S.pushSubscribed=false; }
 }
 async function subscribePush(){
+  if(isNative()){ await registerNativePush(); return; }
   try{
     if(!('serviceWorker' in navigator)||!('PushManager' in window)||typeof Notification==='undefined'){
       toast('Notifications aren\'t supported here. On iPhone, add IMFine to your Home Screen first.');return;
@@ -141,6 +198,7 @@ async function subscribePush(){
   }catch(e){ toast(e.message||'Could not enable notifications'); }
 }
 async function unsubscribePush(){
+  if(isNative()){ await unregisterNativePush(); return; }
   try{
     const reg=await navigator.serviceWorker.ready;
     const sub=await reg.pushManager.getSubscription();
@@ -150,7 +208,7 @@ async function unsubscribePush(){
   }catch(e){ toast(e.message||'Could not turn off notifications'); }
 }
 function pushCard(){
-  if(!('serviceWorker' in navigator)||!('PushManager' in window)) return '';
+  if(!isNative() && (!('serviceWorker' in navigator)||!('PushManager' in window))) return '';
   if(S.pushSubscribed){
     return `<div class="card between" style="margin-top:12px"><div class="row"><span style="width:22px;height:22px;color:var(--green)">${I.bell}</span><span class="small" style="color:var(--ink)">Notifications are on</span></div><button class="btn btn-ghost" style="width:auto;padding:9px 16px" data-a="disable-push">Turn off</button></div>`;
   }
