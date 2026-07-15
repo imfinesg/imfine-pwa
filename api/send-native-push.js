@@ -1,46 +1,68 @@
-// IMFine — send a NATIVE push (iOS/Android) via Firebase Cloud Messaging.
-// Called by the rescue clock via pg_net. Uses a Firebase service account.
-const FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
+// IMFine — send a NATIVE iOS push DIRECTLY to Apple (APNs) using a .p8 key.
+// No Firebase needed for iOS: the Capacitor push plugin gives us an APNs token,
+// and this talks straight to Apple with your APNs auth key.
+import { createSign } from "node:crypto";
+import http2 from "node:http2";
 
-// Build a Google OAuth token from the service-account JSON (no SDK needed).
-async function getAccessToken(sa) {
+const BUNDLE_ID = "com.imfine.app";
+
+// Apple JWT: valid up to 1 hour; cache it between invocations.
+let cachedToken = null;
+let cachedAt = 0;
+function appleAuthToken() {
   const now = Math.floor(Date.now() / 1000);
-  const header = { alg: "RS256", typ: "JWT" };
-  const claim = {
-    iss: sa.client_email,
-    scope: FCM_SCOPE,
-    aud: "https://oauth2.googleapis.com/token",
-    iat: now,
-    exp: now + 3600,
-  };
+  if (cachedToken && now - cachedAt < 3000) return cachedToken;
+
+  const keyId = process.env.APNS_KEY_ID;
+  const teamId = process.env.APNS_TEAM_ID;
+  let p8 = process.env.APNS_P8 || "";
+  // Allow the key to be pasted with literal \n sequences.
+  p8 = p8.replace(/\\n/g, "\n").trim();
+
   const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
-  const unsigned = `${b64(header)}.${b64(claim)}`;
-
-  const { createSign } = await import("node:crypto");
-  const signer = createSign("RSA-SHA256");
+  const unsigned = `${b64({ alg: "ES256", kid: keyId })}.${b64({ iss: teamId, iat: now })}`;
+  const signer = createSign("SHA256");
   signer.update(unsigned);
-  const signature = signer.sign(sa.private_key).toString("base64url");
-  const jwt = `${unsigned}.${signature}`;
+  const sig = signer.sign({ key: p8, dsaEncoding: "ieee-p1363" }).toString("base64url");
 
-  const r = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion: jwt,
-    }),
+  cachedToken = `${unsigned}.${sig}`;
+  cachedAt = now;
+  return cachedToken;
+}
+
+function sendToApns(host, deviceToken, payload, jwt) {
+  return new Promise((resolve) => {
+    const client = http2.connect(`https://${host}`);
+    client.on("error", (e) => resolve({ ok: false, error: e.message }));
+
+    const req = client.request({
+      ":method": "POST",
+      ":path": `/3/device/${deviceToken}`,
+      authorization: `bearer ${jwt}`,
+      "apns-topic": BUNDLE_ID,
+      "apns-push-type": "alert",
+      "apns-priority": "10",
+      "content-type": "application/json",
+    });
+
+    let status = 0, body = "";
+    req.on("response", (h) => { status = h[":status"]; });
+    req.setEncoding("utf8");
+    req.on("data", (d) => { body += d; });
+    req.on("end", () => { client.close(); resolve({ ok: status === 200, status, body }); });
+    req.on("error", (e) => { try { client.close(); } catch (_) {} resolve({ ok: false, error: e.message }); });
+
+    req.write(JSON.stringify(payload));
+    req.end();
   });
-  const j = await r.json();
-  if (!j.access_token) throw new Error("Token error: " + JSON.stringify(j));
-  return j.access_token;
 }
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
     return res.status(200).json({
       status: "ok",
-      hint: "IMFine native push is live.",
-      configured: !!process.env.FIREBASE_SERVICE_ACCOUNT,
+      hint: "IMFine native iOS push (direct APNs) is live.",
+      configured: !!(process.env.APNS_P8 && process.env.APNS_KEY_ID && process.env.APNS_TEAM_ID),
     });
   }
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
@@ -52,32 +74,25 @@ export default async function handler(req, res) {
     const { token, title, body } = req.body || {};
     if (!token) return res.status(400).json({ error: "Missing token" });
 
-    const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    const accessToken = await getAccessToken(sa);
+    const jwt = appleAuthToken();
+    const payload = {
+      aps: {
+        alert: { title: title || "IMFine", body: body || "" },
+        sound: "default",
+        badge: 1,
+      },
+    };
 
-    const r = await fetch(
-      `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: {
-            token,
-            notification: { title: title || "IMFine", body: body || "" },
-            apns: {
-              payload: { aps: { sound: "default", badge: 1 } },
-            },
-          },
-        }),
-      }
-    );
-    const out = await r.json();
-    if (!r.ok) return res.status(200).json({ ok: false, error: out });
-    return res.status(200).json({ ok: true, id: out.name });
+    // Xcode builds use the sandbox; TestFlight/App Store use production.
+    // Try production first, fall back to sandbox (covers both automatically).
+    let r = await sendToApns("api.push.apple.com", token, payload, jwt);
+    if (!r.ok) {
+      const r2 = await sendToApns("api.sandbox.push.apple.com", token, payload, jwt);
+      if (r2.ok) return res.status(200).json({ ok: true, env: "sandbox" });
+      return res.status(200).json({ ok: false, production: r, sandbox: r2 });
+    }
+    return res.status(200).json({ ok: true, env: "production" });
   } catch (e) {
-    return res.status(500).json({ error: e.message || "Native push failed" });
+    return res.status(500).json({ error: e.message || "APNs send failed" });
   }
 }
