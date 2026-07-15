@@ -19,6 +19,9 @@ export default async function handler(req, res) {
     const email = b.email;
     const seniorName = b.seniorName || "Your family member";
     const place = b.place || null;
+    const lat = b.lat, lng = b.lng;
+    const mapUrl = (lat != null && lng != null) ? `https://maps.google.com/?q=${lat},${lng}` : null;
+    const seenAt = b.seenAt ? new Date(b.seenAt).toLocaleString("en-SG", { timeZone: "Asia/Singapore" }) : null;
     if (!email) return res.status(400).json({ error: "Missing email" });
 
     const transporter = nodemailer.createTransport({
@@ -26,7 +29,9 @@ export default async function handler(req, res) {
       auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_PASS },
     });
 
-    const locLine = place ? `\nLast known location: ${place}` : "";
+    const locLine = mapUrl
+      ? `\n\nLast known location (recorded at their last check-in${seenAt ? ", " + seenAt : ""}):\n${mapUrl}`
+      : "";
     const text =
 `Hi ${guardianName},
 
@@ -46,7 +51,11 @@ Open IMFine: ${APP_URL}
   <p style="font-size:16px">Hi ${guardianName},</p>
   <p style="font-size:16px"><b>${seniorName}</b> has not completed their daily IMFine check-in today, and did not respond to reminders.</p>
   <p style="font-size:16px">This may be nothing — but please try to reach them now to make sure they're okay.</p>
-  ${place ? `<div style="background:#fee2e2;border:1px solid #fecaca;border-radius:12px;padding:12px;font-size:14px"><b>Last known location:</b> ${place}</div>` : ""}
+  ${mapUrl ? `<div style="background:#fee2e2;border:1px solid #fecaca;border-radius:12px;padding:14px;font-size:14px">
+    <b>Last known location</b><br>
+    <span style="color:#64748b;font-size:12px">Recorded at their last check-in${seenAt ? " &middot; " + seenAt : ""}</span>
+    <a href="${mapUrl}" style="display:block;margin-top:10px;text-align:center;background:#b91c1c;color:#fff;text-decoration:none;font-weight:700;padding:12px;border-radius:10px">Open in Maps</a>
+  </div>` : `<div style="background:#f1f5f9;border-radius:12px;padding:12px;font-size:13px;color:#64748b">No location was recorded for this person.</div>`}
   <div style="text-align:center;margin:22px 0">
     <a href="${APP_URL}" style="background:#0284c7;color:#fff;text-decoration:none;font-weight:700;padding:14px 22px;border-radius:14px;display:inline-block">Open IMFine</a>
   </div>
