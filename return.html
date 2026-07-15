@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>IMFine</title>
+<style>
+  body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#ecfdf5;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#0f172a}
+  .box{text-align:center;padding:28px 24px;max-width:340px}
+  .disc{width:110px;height:110px;border-radius:50%;margin:0 auto 20px;display:grid;place-items:center;
+    background:linear-gradient(135deg,#34d399,#059669);box-shadow:0 14px 28px rgba(5,80,60,.28)}
+  .disc svg{width:56px;height:56px}
+  h1{font-size:24px;margin:0 0 8px}
+  p{font-size:16px;color:#475569;margin:0 0 6px;line-height:1.5}
+  .hint{margin-top:22px;font-size:14px;color:#64748b;background:#fff;border-radius:14px;padding:14px}
+  .cancel .disc{background:#94a3b8;box-shadow:none}
+</style>
+</head>
+<body>
+<div class="box" id="box">
+  <div class="disc">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+  </div>
+  <h1 id="t">Payment complete</h1>
+  <p id="m">Thank you — your Premium plan is being activated.</p>
+  <div class="hint">Tap <b>Done</b> or <b>✕</b> at the top of this screen to go back to IMFine.</div>
+</div>
+<script>
+  // Show a "cancelled" variant if Stripe sent the user back without paying.
+  if (new URLSearchParams(location.search).get('cancelled')) {
+    document.getElementById('box').className = 'box cancel';
+    document.getElementById('t').textContent = 'No payment made';
+    document.getElementById('m').textContent = 'You can upgrade any time from the app.';
+  }
+</script>
+</body>
+</html>
