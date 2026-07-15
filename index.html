@@ -134,10 +134,15 @@ async function registerNativePush(){
       // Save the device token when iOS hands it to us.
       await PN.addListener('registration', async (t)=>{
         try{
+          // Remove any old token rows for this user, then upsert the new one.
           await supabase.from('native_push_tokens').delete().eq('user_id',S.user.id);
-          await supabase.from('native_push_tokens').insert({user_id:S.user.id, token:t.value, platform:nativePlatform()==='android'?'android':'ios'});
-          S.pushSubscribed=true; sheetOpen=false; render(); toast('Notifications turned on ✓');
-        }catch(e){ toast('Could not save device token: '+(e.message||'')); }
+          const {error}=await supabase.from('native_push_tokens')
+            .upsert({user_id:S.user.id, token:t.value, platform:nativePlatform()==='android'?'android':'ios'},{onConflict:'token'});
+          if(error) throw error;
+          await refreshPushState();          // read the truth back from the database
+          sheetOpen=false; render();
+          toast(S.pushSubscribed?'Notifications turned on ✓':'Saved, but state not confirmed');
+        }catch(e){ toast('Token save failed: '+(e.message||JSON.stringify(e))); }
         done(true);
       });
       await PN.addListener('registrationError', (e)=>{
