@@ -126,9 +126,32 @@ function loadNativePush(){
   const P = window.Capacitor && window.Capacitor.Plugins;
   return (P && P.PushNotifications) ? P.PushNotifications : null;
 }
+// Android: create a HIGH-importance notification channel so alerts pop up as
+// a banner, make a sound, and appear on the lock screen. Without this, Android
+// puts notifications on a quiet default channel (status-bar icon only) — not
+// good enough for a safety alert.
+async function ensureAndroidChannel(){
+  try{
+    if(!isNative() || nativePlatform() !== 'android') return;
+    const PN = loadNativePush();
+    if(!PN || !PN.createChannel) return;
+    await PN.createChannel({
+      id: 'imfine_alerts',
+      name: 'IMFine alerts',
+      description: 'Check-in reminders and missed check-in alerts',
+      importance: 5,      // IMPORTANCE_HIGH -> heads-up banner + sound
+      visibility: 1,      // VISIBILITY_PUBLIC -> shows on the lock screen
+      sound: 'default',
+      vibration: true,
+      lights: true,
+    });
+  }catch(_){}
+}
+
 async function registerNativePush(){
   const PN = loadNativePush();
   if(!PN) { toast('Push plugin not found in this build'); return false; }
+  await ensureAndroidChannel();
   return new Promise(async (resolve)=>{
     let settled=false;
     const done=(v)=>{ if(!settled){settled=true;resolve(v);} };
