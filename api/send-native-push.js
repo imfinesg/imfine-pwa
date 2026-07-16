@@ -108,7 +108,7 @@ export default async function handler(req, res) {
               notification: { title: title || "IMFine", body: body || "" },
               android: {
                 priority: "high",
-                notification: { sound: "default", channel_id: "imfine_alerts" },
+                notification: { sound: "default" },
               },
             },
           }),
