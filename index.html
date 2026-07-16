@@ -687,16 +687,16 @@ document.getElementById('app').addEventListener('click',async(e)=>{
 });
 
 /* ============ boot ============ */
-// Service worker is for the WEB/PWA only. Inside the native app it caches
-// pages and causes stale or blank screens after each deploy, so we disable
-// it there and remove any copy left over from earlier installs.
-if (isNative()) {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(()=>{});
-    if (window.caches && caches.keys) caches.keys().then(ks => ks.forEach(k => caches.delete(k))).catch(()=>{});
-  }
-} else if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+// The service worker has been removed. It cached pages and caused stale or
+// blank screens after every deploy, and both platforms are now native apps
+// (which need a live connection anyway). This actively removes any copy left
+// over on devices from earlier versions.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations()
+    .then(rs => rs.forEach(r => r.unregister())).catch(()=>{});
+}
+if (window.caches && caches.keys) {
+  caches.keys().then(ks => ks.forEach(k => caches.delete(k))).catch(()=>{});
 }
 boot();
 </script>
